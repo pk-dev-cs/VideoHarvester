@@ -1,8 +1,7 @@
 ﻿using System.ComponentModel;
-using System.ComponentModel;
 using System.IO;
 
-namespace VideoHarvester;
+namespace VideoHarvester.Models;
 
 public class Video : INotifyPropertyChanged
 {
@@ -35,6 +34,7 @@ public class Video : INotifyPropertyChanged
     public string FilePath => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyVideos), $"{Order}.mp4");
 
     public event PropertyChangedEventHandler? PropertyChanged;
+
     protected void OnPropertyChanged(string propertyName)
     {
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
