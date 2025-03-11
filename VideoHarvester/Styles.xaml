@@ -58,7 +58,7 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Button">
-                    <Border Background="{TemplateBinding Background}" CornerRadius="5">
+                    <Border Background="{TemplateBinding Background}">
                         <TextBlock Text="+" FontSize="18" FontWeight="Bold"
                                    Foreground="{TemplateBinding Foreground}"
                                    VerticalAlignment="Center" HorizontalAlignment="Center"/>
