@@ -1,17 +1,15 @@
-﻿using System;
-using System.Globalization;
+﻿using System.Globalization;
 using System.Windows.Data;
 
-namespace VideoHarvester;
+namespace VideoHarvester.Converters;
 
 public class WidthAdjustmentConverter : IValueConverter
 {
     public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
     {
         if (value is double originalWidth)
-        {
-            return originalWidth - 30; // Subtract 10 pixels
-        }
+            return originalWidth - 40;
+
         return value;
     }
 
