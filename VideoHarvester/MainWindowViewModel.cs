@@ -1,8 +1,10 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
+using HtmlAgilityPack;
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Web;
 using System.Windows;
 using VideoHarvester.Messages;
 using VideoHarvester.Models;
@@ -18,17 +20,57 @@ public partial class MainWindowViewModel : ObservableObject
     private bool _isDownloading = false;
 
     [ObservableProperty]
-    private string videoId = "";
+    private string? videoId = "";
 
     public ObservableCollection<Video> DownloadQueue { get; } = [];
 
-    public MainWindowViewModel(IDownloadVideoService downloadVideoService) 
+    public MainWindowViewModel(IDownloadVideoService downloadVideoService)
         => _downloadVideoService = downloadVideoService;
+
+    public static string? ExtractWistiaVideoId(string? html)
+    {
+        if (string.IsNullOrWhiteSpace(html))
+            return null;
+
+        var doc = new HtmlDocument();
+        doc.LoadHtml(html);
+
+        // Look for all anchor tags with href attributes
+        var links = doc.DocumentNode.SelectNodes("//a[@href]");
+
+        if (links == null) return null;
+
+        foreach (var link in links)
+        {
+            var href = link.GetAttributeValue("href", null!);
+            if (href != null && href.Contains("wvideo="))
+            {
+                try
+                {
+                    var uri = new Uri(href);
+                    var query = HttpUtility.ParseQueryString(uri.Query);
+                    return query["wvideo"];
+                }
+                catch
+                {
+                    // fallback if Uri fails (maybe it's a relative URL)
+                    var query = href.Split('?').Skip(1).FirstOrDefault();
+                    if (query != null)
+                    {
+                        var parts = HttpUtility.ParseQueryString(query);
+                        return parts["wvideo"];
+                    }
+                }
+            }
+        }
+
+        return null;
+    }
 
     [RelayCommand]
     public void AddToQueue()
     {
-        VideoId = VideoId.Trim();
+        VideoId = ExtractWistiaVideoId(VideoId);
 
         if (string.IsNullOrWhiteSpace(VideoId))
         {
@@ -46,7 +88,7 @@ public partial class MainWindowViewModel : ObservableObject
     }
 
     [RelayCommand]
-    public void OpenFolder(string filePath)
+    public static void OpenFolder(string filePath)
     {
         string? folderPath = Path.GetDirectoryName(filePath);
         if (!string.IsNullOrEmpty(folderPath))
@@ -56,14 +98,14 @@ public partial class MainWindowViewModel : ObservableObject
     private async void ProcessQueue()
     {
         if (_isDownloading)
-            return; // Prevent multiple executions
+            return;
 
         _isDownloading = true;
 
-        while (DownloadQueue.Any(v => v.Status == "Queued")) // Process until all are downloaded
+        while (DownloadQueue.Any(v => v.Status == "Queued"))
         {
-            var video = DownloadQueue.First(v => v.Status == "Queued"); // Get the first queued video
-            await _downloadVideoService.DownloadVideo(video); // Download and update UI
+            var video = DownloadQueue.First(v => v.Status == "Queued");
+            await _downloadVideoService.DownloadVideo(video);
         }
 
         _isDownloading = false;
