@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using System.IO;
 
 namespace VideoHarvester.Models;
@@ -9,6 +9,7 @@ public class Video : INotifyPropertyChanged
     private string _status = "Queued";  // Default status
 
     public required string VideoId { get; set; }
+    public required VideoSource Source { get; set; }
     public int Order { get; set; }
 
     public int Progress
@@ -31,7 +32,7 @@ public class Video : INotifyPropertyChanged
         }
     }
 
-    public string FilePath => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyVideos), $"{Order}.mp4");
+    public string FilePath => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyVideos), $"{Order}.{Source switch { VideoSource.YouTube => "mkv", VideoSource.YouTubeWav => "wav", _ => "mp4" }}");
 
     public event PropertyChangedEventHandler? PropertyChanged;
 

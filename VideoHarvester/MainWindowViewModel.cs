@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using HtmlAgilityPack;
@@ -21,6 +21,11 @@ public partial class MainWindowViewModel : ObservableObject
 
     [ObservableProperty]
     private string? videoId = "";
+
+    [ObservableProperty]
+    private VideoSource selectedSource = VideoSource.Wistia;
+
+    public IReadOnlyList<VideoSource> AvailableSources { get; } = Enum.GetValues<VideoSource>();
 
     public ObservableCollection<Video> DownloadQueue { get; } = [];
 
@@ -70,21 +75,29 @@ public partial class MainWindowViewModel : ObservableObject
     [RelayCommand]
     public void AddToQueue()
     {
-        VideoId = ExtractWistiaVideoId(VideoId);
+        string? videoReference = SelectedSource == VideoSource.Wistia ? ExtractWistiaVideoId(VideoId) : NormalizeYouTubeUrl(VideoId);
 
-        if (string.IsNullOrWhiteSpace(VideoId))
+        if (string.IsNullOrWhiteSpace(videoReference))
         {
-            MessageBox.Show("Please enter a valid VIDEO-ID.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            MessageBox.Show(SelectedSource == VideoSource.Wistia ? "Please enter a page address containing a Wistia video." : "Please enter a valid YouTube video URL.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             return;
         }
 
-        var video = new Video { Order = ++Order, VideoId = VideoId, Progress = 0 };
+        var video = new Video { Order = ++Order, VideoId = videoReference, Source = SelectedSource, Progress = 0 };
         DownloadQueue.Add(video);
 
         WeakReferenceMessenger.Default.Send(new FolderOpenedMessage());
 
         if (!_isDownloading)
             ProcessQueue();
+    }
+
+    private static string? NormalizeYouTubeUrl(string? value)
+    {
+        if (!Uri.TryCreate(value?.Trim(), UriKind.Absolute, out Uri? uri)) return null;
+        string host = uri.Host.ToLowerInvariant();
+        bool valid = host == "youtu.be" || host == "youtube.com" || host.EndsWith(".youtube.com", StringComparison.Ordinal) || host == "youtube-nocookie.com" || host.EndsWith(".youtube-nocookie.com", StringComparison.Ordinal);
+        return valid ? uri.AbsoluteUri : null;
     }
 
     [RelayCommand]
