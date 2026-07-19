@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
@@ -11,6 +11,8 @@
 
   <ItemGroup>
     <Content Include="Images\icon.ico" />
+    <None Remove="Images\logo.png" />
+    <Resource Include="Images\logo.png" />
   </ItemGroup>
 
   <ItemGroup>
