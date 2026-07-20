@@ -1,7 +1,10 @@
+using System.Diagnostics;
 using System.IO;
 using System.Net.Http;
+using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using System.Windows.Media.Imaging;
 using VideoHarvester.Models;
 
 namespace VideoHarvester.Services;
@@ -53,10 +56,97 @@ internal static class WistiaDownloader
 
             video.Progress = 100;
             video.Status = "Downloaded";
+
+            // Extract thumbnail after successful download
+            await ExtractThumbnail(video);
         }
         catch (Exception)
         {
             video.Status = "Failed";
+        }
+    }
+
+    private static async Task ExtractThumbnail(Video video)
+    {
+        try
+        {
+            var errorOutput = new StringBuilder();
+            var startInfo = new ProcessStartInfo
+            {
+                FileName = "ffmpeg",
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
+
+            string[] arguments =
+            [
+                "-ss", "2",
+                "-i", video.FilePath,
+                "-vframes", "1",
+                "-vf", "scale=320:-1",
+                "-f", "image2pipe",
+                "-vcodec", "mjpeg",
+                "pipe:1"
+            ];
+
+            foreach (string argument in arguments)
+                startInfo.ArgumentList.Add(argument);
+
+            using var process = new Process { StartInfo = startInfo };
+            process.ErrorDataReceived += (_, e) =>
+            {
+                if (!string.IsNullOrWhiteSpace(e.Data))
+                    errorOutput.AppendLine(e.Data);
+            };
+
+            process.Start();
+            process.BeginErrorReadLine();
+
+            using var memoryStream = new MemoryStream();
+            await process.StandardOutput.BaseStream.CopyToAsync(memoryStream);
+            await process.WaitForExitAsync();
+
+            if (process.ExitCode == 0 && memoryStream.Length > 0)
+            {
+                memoryStream.Position = 0;
+
+                var bitmap = new BitmapImage();
+                bitmap.BeginInit();
+                bitmap.CacheOption = BitmapCacheOption.OnLoad;
+                bitmap.StreamSource = memoryStream;
+                bitmap.EndInit();
+                bitmap.Freeze();
+
+                video.ThumbnailImage = bitmap;
+            }
+            else
+            {
+                var debugInfo = new StringBuilder();
+                if (video.ErrorMessage != null)
+                    debugInfo.AppendLine(video.ErrorMessage);
+                debugInfo.AppendLine($"Thumbnail extraction failed:");
+                debugInfo.AppendLine($"Exit Code: {process.ExitCode}");
+                debugInfo.AppendLine($"Stream Length: {memoryStream.Length} bytes");
+                debugInfo.AppendLine($"Video Path: {video.FilePath}");
+                debugInfo.AppendLine($"Video Exists: {File.Exists(video.FilePath)}");
+                if (errorOutput.Length > 0)
+                {
+                    debugInfo.AppendLine("FFmpeg output:");
+                    string errorText = errorOutput.ToString();
+                    debugInfo.Append(errorText.Length > 500 ? "..." + errorText.Substring(errorText.Length - 500) : errorText);
+                }
+                video.ErrorMessage = debugInfo.ToString();
+            }
+        }
+        catch (Exception ex)
+        {
+            var debugInfo = new StringBuilder();
+            if (video.ErrorMessage != null)
+                debugInfo.AppendLine(video.ErrorMessage);
+            debugInfo.AppendLine($"Thumbnail exception: {ex.Message}");
+            video.ErrorMessage = debugInfo.ToString();
         }
     }
 }
