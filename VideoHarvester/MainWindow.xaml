@@ -121,13 +121,61 @@
                                         <RowDefinition Height="Auto" />
                                         <RowDefinition Height="14" />
                                         <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
                                     </Grid.RowDefinitions>
                                     <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="12" />
                                         <ColumnDefinition Width="*" />
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
 
-                                    <StackPanel Grid.Row="0">
+                                    <!-- Thumbnail -->
+                                    <Border Grid.Row="0" Grid.RowSpan="6" Grid.Column="0"
+                                            Width="120" Height="68" 
+                                            Background="#1D2635" 
+                                            CornerRadius="6"
+                                            BorderBrush="#2D3848" 
+                                            BorderThickness="1">
+                                        <Grid>
+                                            <!-- Thumbnail Image -->
+                                            <Image Source="{Binding ThumbnailImage}" 
+                                                   Stretch="UniformToFill"
+                                                   RenderOptions.BitmapScalingMode="HighQuality">
+                                                <Image.Style>
+                                                    <Style TargetType="Image">
+                                                        <Setter Property="Visibility" Value="Visible" />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding ThumbnailImage}" Value="{x:Null}">
+                                                                <Setter Property="Visibility" Value="Collapsed" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Image.Style>
+                                            </Image>
+
+                                            <!-- Placeholder when no thumbnail -->
+                                            <TextBlock Text="&#xE714;" 
+                                                       FontFamily="Segoe MDL2 Assets" 
+                                                       FontSize="32"
+                                                       Foreground="#475569"
+                                                       HorizontalAlignment="Center"
+                                                       VerticalAlignment="Center">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Visibility" Value="Collapsed" />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding ThumbnailImage}" Value="{x:Null}">
+                                                                <Setter Property="Visibility" Value="Visible" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                        </Grid>
+                                    </Border>
+
+                                    <StackPanel Grid.Row="0" Grid.Column="2">
                                         <TextBlock Text="{Binding Source}" Foreground="#60A5FA"
                                                    FontSize="11" FontWeight="SemiBold" />
                                         <TextBlock Text="{Binding VideoId}" Margin="0,5,20,0"
@@ -136,7 +184,7 @@
                                                    ToolTip="{Binding VideoId}" />
                                     </StackPanel>
 
-                                    <Button Grid.Row="0" Grid.Column="1" Grid.RowSpan="3"
+                                    <Button Grid.Row="0" Grid.Column="3" Grid.RowSpan="3"
                                             Width="38" Height="38" ToolTip="Open containing folder"
                                             Visibility="{Binding Status, Converter={StaticResource ButtonVisibilityConverter}}"
                                             Command="{Binding DataContext.OpenFolderCommand, RelativeSource={RelativeSource AncestorType=Window}}"
@@ -145,14 +193,56 @@
                                         <TextBlock Text="&#xE838;" FontFamily="Segoe MDL2 Assets" FontSize="16" />
                                     </Button>
 
-                                    <ProgressBar Grid.Row="2" Height="6" Maximum="100" Value="{Binding Progress}" />
+                                    <ProgressBar Grid.Row="2" Grid.Column="2" Grid.ColumnSpan="2" Height="6" Maximum="100" Value="{Binding Progress}" />
 
-                                    <Grid Grid.Row="4" Grid.ColumnSpan="2">
+                                    <Grid Grid.Row="4" Grid.Column="2" Grid.ColumnSpan="2">
                                         <TextBlock Text="{Binding Status}" FontSize="12"
                                                    Foreground="{Binding Status, Converter={StaticResource StatusColorConverter}}" />
                                         <TextBlock Text="{Binding Progress, StringFormat={}{0}%}" HorizontalAlignment="Right"
                                                    Foreground="#7E899A" FontSize="12" />
                                     </Grid>
+
+                                    <!-- Error Message Display -->
+                                    <Border Grid.Row="5" Grid.Column="2" Grid.ColumnSpan="2" Margin="0,8,0,0"
+                                            Background="#2D1B1E" BorderBrush="#7F1D1D" BorderThickness="1"
+                                            CornerRadius="4" Padding="8">
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Setter Property="Visibility" Value="Visible" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding ErrorMessage}" Value="{x:Null}">
+                                                        <Setter Property="Visibility" Value="Collapsed" />
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding ErrorMessage}" Value="">
+                                                        <Setter Property="Visibility" Value="Collapsed" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
+                                        <Grid>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="4" />
+                                                <RowDefinition Height="Auto" />
+                                            </Grid.RowDefinitions>
+                                            <TextBlock Grid.Row="0" Text="⚠ Error Details" 
+                                                       FontSize="11" FontWeight="SemiBold" 
+                                                       Foreground="#FCA5A5" />
+                                            <TextBlock Grid.Row="2" Text="{Binding ErrorMessage}"
+                                                       FontSize="11" FontFamily="Consolas"
+                                                       Foreground="#FEF2F2" TextWrapping="Wrap"
+                                                       MaxHeight="200" TextTrimming="CharacterEllipsis">
+                                                <TextBlock.ToolTip>
+                                                    <ToolTip MaxWidth="600">
+                                                        <TextBlock Text="{Binding ErrorMessage}" 
+                                                                   TextWrapping="Wrap" 
+                                                                   FontFamily="Consolas" 
+                                                                   FontSize="11" />
+                                                    </ToolTip>
+                                                </TextBlock.ToolTip>
+                                            </TextBlock>
+                                        </Grid>
+                                    </Border>
                                 </Grid>
                             </Border>
                         </DataTemplate>
