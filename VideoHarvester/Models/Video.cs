@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.IO;
+using System.Windows.Media.Imaging;
 
 namespace VideoHarvester.Models;
 
@@ -7,6 +8,8 @@ public class Video : INotifyPropertyChanged
 {
     private int _progress;
     private string _status = "Queued";  // Default status
+    private string? _errorMessage;
+    private BitmapImage? _thumbnailImage;
 
     public required string VideoId { get; set; }
     public required VideoSource Source { get; set; }
@@ -29,6 +32,26 @@ public class Video : INotifyPropertyChanged
         {
             _status = value;
             OnPropertyChanged(nameof(Status));
+        }
+    }
+
+    public string? ErrorMessage
+    {
+        get => _errorMessage;
+        set
+        {
+            _errorMessage = value;
+            OnPropertyChanged(nameof(ErrorMessage));
+        }
+    }
+
+    public BitmapImage? ThumbnailImage
+    {
+        get => _thumbnailImage;
+        set
+        {
+            _thumbnailImage = value;
+            OnPropertyChanged(nameof(ThumbnailImage));
         }
     }
 
