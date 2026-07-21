@@ -29,8 +29,21 @@ public partial class MainWindowViewModel : ObservableObject
 
     public ObservableCollection<Video> DownloadQueue { get; } = [];
 
+    public ObservableCollection<DependencyStatus> Dependencies { get; } = [];
+
     public MainWindowViewModel(IDownloadVideoService downloadVideoService)
-        => _downloadVideoService = downloadVideoService;
+    {
+        _downloadVideoService = downloadVideoService;
+        _ = InitializeDependencies();
+    }
+
+    private async Task InitializeDependencies()
+    {
+        Dependencies.Add(await DependencyChecker.CheckNodeJs());
+        Dependencies.Add(await DependencyChecker.CheckPython());
+        Dependencies.Add(await DependencyChecker.CheckFFmpeg());
+        Dependencies.Add(await DependencyChecker.CheckYtDlp());
+    }
 
     public static string? ExtractWistiaVideoId(string? html)
     {

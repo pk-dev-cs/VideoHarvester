@@ -16,6 +16,7 @@
             </ResourceDictionary.MergedDictionaries>
             <converters:StatusColorConverter x:Key="StatusColorConverter" />
             <converters:ButtonVisibilityConverter x:Key="ButtonVisibilityConverter" />
+            <converters:DependencyStatusColorConverter x:Key="DependencyStatusColorConverter" />
         </ResourceDictionary>
     </Window.Resources>
 
@@ -23,6 +24,7 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
         <Border Grid.Row="0" Background="#151922" BorderBrush="#252B38" BorderThickness="0,0,0,1">
@@ -250,5 +252,32 @@
                 </ListBox>
             </Border>
         </Grid>
+
+        <!-- Footer with Dependency Status -->
+        <Border Grid.Row="2" Background="#151922" BorderBrush="#252B38" BorderThickness="0,1,0,0" Padding="28,12">
+            <ItemsControl ItemsSource="{Binding Dependencies}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <StackPanel Orientation="Horizontal" Margin="16,0">
+                            <TextBlock Text="{Binding Icon}" 
+                                       FontFamily="Segoe MDL2 Assets" 
+                                       FontSize="16"
+                                       Foreground="{Binding IsAvailable, Converter={StaticResource DependencyStatusColorConverter}}"
+                                       VerticalAlignment="Center" />
+                            <TextBlock Text="{Binding Name}" 
+                                       FontSize="12" 
+                                       Margin="6,0,0,0"
+                                       Foreground="{Binding IsAvailable, Converter={StaticResource DependencyStatusColorConverter}}"
+                                       VerticalAlignment="Center" />
+                        </StackPanel>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </Border>
     </Grid>
 </Window>
