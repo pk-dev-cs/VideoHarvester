@@ -24,11 +24,28 @@ namespace VideoHarvester
         {
             var services = new ServiceCollection();
 
-            
+
             services.AddSingleton<IDownloadVideoService, DownloadVideoService>();
             services.AddSingleton<MainWindowViewModel, MainWindowViewModel>();
 
             return services.BuildServiceProvider();
+        }
+
+        private void Application_Startup(object sender, StartupEventArgs e)
+        {
+            // Create and show main window first (but don't show it yet)
+            var mainWindow = new MainWindow();
+            Application.Current.MainWindow = mainWindow;
+
+            // Show splash screen
+            var splashScreen = new SplashScreen();
+            splashScreen.Show();
+
+            // After splash screen closes, show main window
+            splashScreen.Closed += (s, args) =>
+            {
+                mainWindow.Show();
+            };
         }
     }
 }
