@@ -4,6 +4,8 @@ name: .NET Desktop
 on:
   push:
     branches: [ "main" ]
+    tags:
+      - 'v*'
   pull_request:
     branches: [ "main" ]
 
@@ -60,3 +62,56 @@ jobs:
       with:
         name: VideoHarvester-Release
         path: ./publish
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+
+    permissions:
+      contents: write
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Download build artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: VideoHarvester-Release
+        path: ./release
+
+    - name: Create ZIP archive
+      run: |
+        cd release
+        zip -r ../VideoHarvester-${{ github.ref_name }}.zip .
+        cd ..
+
+    - name: Extract version from tag
+      id: get_version
+      run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: VideoHarvester-${{ github.ref_name }}.zip
+        generate_release_notes: true
+        draft: false
+        prerelease: false
+        name: Release ${{ github.ref_name }}
+        body: |
+          ## VideoHarvester ${{ github.ref_name }}
+
+          ### Installation
+          1. Download the ZIP file below
+          2. Extract all files to a folder
+          3. Run VideoHarvester.exe
+
+          ### Requirements
+          - Windows 10/11
+          - .NET 8.0 Runtime Desktop
+
+          ### Changes
+          See the automatically generated release notes below.
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
