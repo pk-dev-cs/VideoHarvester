@@ -13,6 +13,8 @@
     <Content Include="Images\icon.ico" />
     <None Remove="Images\logo.png" />
     <Resource Include="Images\logo.png" />
+    <None Remove="Images\splash.png" />
+    <Resource Include="Images\splash.png" />
   </ItemGroup>
 
   <ItemGroup>
