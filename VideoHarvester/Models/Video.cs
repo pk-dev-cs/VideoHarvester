@@ -10,10 +10,32 @@ public class Video : INotifyPropertyChanged
     private string _status = "Queued";  // Default status
     private string? _errorMessage;
     private BitmapImage? _thumbnailImage;
+    private string? _title;
+    private string? _quality;
 
     public required string VideoId { get; set; }
     public required VideoSource Source { get; set; }
     public int Order { get; set; }
+
+    public string? Title
+    {
+        get => _title;
+        set
+        {
+            _title = value;
+            OnPropertyChanged(nameof(Title));
+        }
+    }
+
+    public string? Quality
+    {
+        get => _quality;
+        set
+        {
+            _quality = value;
+            OnPropertyChanged(nameof(Quality));
+        }
+    }
 
     public int Progress
     {

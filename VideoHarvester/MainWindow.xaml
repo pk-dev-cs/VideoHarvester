@@ -17,6 +17,9 @@
             <converters:StatusColorConverter x:Key="StatusColorConverter" />
             <converters:ButtonVisibilityConverter x:Key="ButtonVisibilityConverter" />
             <converters:DependencyStatusColorConverter x:Key="DependencyStatusColorConverter" />
+            <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
+            <converters:BytesToImageConverter x:Key="BytesToImageConverter" />
+            <converters:FileSizeConverter x:Key="FileSizeConverter" />
         </ResourceDictionary>
     </Window.Resources>
 
@@ -27,11 +30,13 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
+        <!-- Header with Hamburger Menu -->
         <Border Grid.Row="0" Background="#151922" BorderBrush="#252B38" BorderThickness="0,0,0,1">
             <Grid Margin="28,22">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
                 <Border Width="44" Height="44" CornerRadius="12" Background="#202735" ClipToBounds="True">
@@ -49,10 +54,19 @@
                     <TextBlock Text="Download video and audio from your preferred source"
                                Margin="0,3,0,0" Foreground="#98A2B3" FontSize="13" />
                 </StackPanel>
+
+                <!-- Hamburger Menu Button -->
+                <Button Grid.Column="2" 
+                        Width="44" Height="44" 
+                        Style="{StaticResource IconButtonStyle}"
+                        Click="HamburgerButton_Click"
+                        ToolTip="Menu">
+                    <TextBlock Text="&#xE700;" FontFamily="Segoe MDL2 Assets" FontSize="20" />
+                </Button>
             </Grid>
         </Border>
 
-        <Grid Grid.Row="1" Margin="28,24,28,28">
+        <Grid Grid.Row="1" Margin="28,24,28,28" Visibility="{Binding IsQueueView, Converter={StaticResource BoolToVisibilityConverter}}">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="22" />
@@ -112,7 +126,8 @@
                          ItemsSource="{Binding DownloadQueue}"
                          Background="Transparent" BorderThickness="0"
                          Padding="10" HorizontalContentAlignment="Stretch"
-                         ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                         ItemContainerStyle="{StaticResource CustomListBoxItemStyle}">
                     <ListBox.ItemTemplate>
                         <DataTemplate>
                             <Border Style="{StaticResource QueueItemCardStyle}">
@@ -180,10 +195,65 @@
                                     <StackPanel Grid.Row="0" Grid.Column="2">
                                         <TextBlock Text="{Binding Source}" Foreground="#60A5FA"
                                                    FontSize="11" FontWeight="SemiBold" />
+
+                                        <!-- Title (if available) -->
+                                        <TextBlock Text="{Binding Title}" Margin="0,5,20,0"
+                                                   FontSize="14" FontWeight="SemiBold"
+                                                   Foreground="#F7F8FA" TextTrimming="CharacterEllipsis"
+                                                   ToolTip="{Binding Title}">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Visibility" Value="Visible" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding Title}" Value="{x:Null}">
+                                                            <Setter Property="Visibility" Value="Collapsed" />
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding Title}" Value="">
+                                                            <Setter Property="Visibility" Value="Collapsed" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+
+                                        <!-- VideoId (fallback if no Title) -->
                                         <TextBlock Text="{Binding VideoId}" Margin="0,5,20,0"
                                                    FontSize="14" FontWeight="SemiBold"
                                                    Foreground="#F7F8FA" TextTrimming="CharacterEllipsis"
-                                                   ToolTip="{Binding VideoId}" />
+                                                   ToolTip="{Binding VideoId}">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Visibility" Value="Collapsed" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding Title}" Value="{x:Null}">
+                                                            <Setter Property="Visibility" Value="Visible" />
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding Title}" Value="">
+                                                            <Setter Property="Visibility" Value="Visible" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+
+                                        <!-- Quality info -->
+                                        <TextBlock Text="{Binding Quality}" Margin="0,3,0,0"
+                                                   FontSize="11" Foreground="#7E899A"
+                                                   TextTrimming="CharacterEllipsis">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Visibility" Value="Visible" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding Quality}" Value="{x:Null}">
+                                                            <Setter Property="Visibility" Value="Collapsed" />
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding Quality}" Value="">
+                                                            <Setter Property="Visibility" Value="Collapsed" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
                                     </StackPanel>
 
                                     <Button Grid.Row="0" Grid.Column="3" Grid.RowSpan="3"
@@ -253,6 +323,294 @@
             </Border>
         </Grid>
 
+        <!-- History View -->
+        <Grid Grid.Row="1" Margin="28,24,28,28" Visibility="{Binding IsQueueView, Converter={StaticResource BoolToVisibilityConverter}, ConverterParameter=Invert}">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="22" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <Grid Grid.Row="0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="Download History" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center" />
+                <Button Grid.Column="1" 
+                        Height="36" MinWidth="100"
+                        Content="Refresh"
+                        Command="{Binding RefreshHistoryCommand}"
+                        Style="{StaticResource PrimaryButtonStyle}">
+                    <Button.ContentTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE72C;" FontFamily="Segoe MDL2 Assets" FontSize="14" VerticalAlignment="Center" />
+                                <TextBlock Text="Refresh" FontSize="13" Margin="8,0,0,0" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </Button.ContentTemplate>
+                </Button>
+            </Grid>
+
+            <Border Grid.Row="2" Style="{StaticResource QueuePanelStyle}">
+                <ListBox ItemsSource="{Binding DownloadHistory}"
+                         Background="Transparent" BorderThickness="0"
+                         Padding="10" HorizontalContentAlignment="Stretch"
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                         ItemContainerStyle="{StaticResource CustomListBoxItemStyle}">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <Border Style="{StaticResource QueueItemCardStyle}">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="8" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="8" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="12" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <!-- Thumbnail -->
+                                    <Border Grid.Row="0" Grid.RowSpan="5" Grid.Column="0"
+                                            Width="120" Height="68" 
+                                            Background="#1D2635" 
+                                            CornerRadius="6"
+                                            BorderBrush="#2D3848" 
+                                            BorderThickness="1">
+                                        <Grid>
+                                            <!-- Thumbnail Image from binary data -->
+                                            <Image Source="{Binding ThumbnailData, Converter={StaticResource BytesToImageConverter}}" 
+                                                   Stretch="UniformToFill"
+                                                   RenderOptions.BitmapScalingMode="HighQuality">
+                                                <Image.Style>
+                                                    <Style TargetType="Image">
+                                                        <Setter Property="Visibility" Value="Visible" />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding ThumbnailData}" Value="{x:Null}">
+                                                                <Setter Property="Visibility" Value="Collapsed" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Image.Style>
+                                            </Image>
+
+                                            <!-- Placeholder when no thumbnail -->
+                                            <TextBlock Text="&#xE714;" 
+                                                       FontFamily="Segoe MDL2 Assets" 
+                                                       FontSize="32"
+                                                       Foreground="#475569"
+                                                       HorizontalAlignment="Center"
+                                                       VerticalAlignment="Center">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Visibility" Value="Collapsed" />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding ThumbnailData}" Value="{x:Null}">
+                                                                <Setter Property="Visibility" Value="Visible" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                        </Grid>
+                                    </Border>
+
+                                    <!-- Header Row -->
+                                    <StackPanel Grid.Row="0" Grid.Column="2">
+                                        <!-- Title (if available) -->
+                                        <TextBlock Text="{Binding Title}" 
+                                                   FontSize="14" FontWeight="SemiBold"
+                                                   Foreground="#F7F8FA" TextTrimming="CharacterEllipsis"
+                                                   ToolTip="{Binding Title}">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Visibility" Value="Visible" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding Title}" Value="{x:Null}">
+                                                            <Setter Property="Visibility" Value="Collapsed" />
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding Title}" Value="">
+                                                            <Setter Property="Visibility" Value="Collapsed" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+
+                                        <!-- SourceUrl (always shown as subtitle or main title) -->
+                                        <TextBlock Text="{Binding SourceUrl}" Margin="0,4,0,0"
+                                                   FontSize="11" Foreground="#7E899A" 
+                                                   TextTrimming="CharacterEllipsis"
+                                                   ToolTip="{Binding SourceUrl}">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <!-- When Title exists, show as small subtitle -->
+                                                    <Setter Property="FontSize" Value="11" />
+                                                    <Setter Property="Foreground" Value="#7E899A" />
+                                                    <Setter Property="FontWeight" Value="Normal" />
+                                                    <Style.Triggers>
+                                                        <!-- When no Title, show as main heading -->
+                                                        <DataTrigger Binding="{Binding Title}" Value="{x:Null}">
+                                                            <Setter Property="FontSize" Value="14" />
+                                                            <Setter Property="Foreground" Value="#F7F8FA" />
+                                                            <Setter Property="FontWeight" Value="SemiBold" />
+                                                            <Setter Property="Margin" Value="0,0,0,0" />
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding Title}" Value="">
+                                                            <Setter Property="FontSize" Value="14" />
+                                                            <Setter Property="Foreground" Value="#F7F8FA" />
+                                                            <Setter Property="FontWeight" Value="SemiBold" />
+                                                            <Setter Property="Margin" Value="0,0,0,0" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                    </StackPanel>
+
+                                    <!-- Status Badge -->
+                                    <Border Grid.Row="0" Grid.Column="3"
+                                            Background="#1D2635" 
+                                            CornerRadius="4" 
+                                            Padding="8,4"
+                                            VerticalAlignment="Top"
+                                            Margin="12,0,0,0">
+                                        <TextBlock Text="{Binding Status}" 
+                                                   FontSize="11" FontWeight="SemiBold"
+                                                   Foreground="{Binding Status, Converter={StaticResource StatusColorConverter}}" />
+                                    </Border>
+
+                                    <!-- Open Folder Button -->
+                                    <Button Grid.Row="0" Grid.Column="3" Grid.RowSpan="3"
+                                            Width="38" Height="38" 
+                                            ToolTip="Open containing folder"
+                                            Command="{Binding DataContext.OpenFolderCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                            CommandParameter="{Binding LocalPath}"
+                                            Margin="12,40,0,0"
+                                            VerticalAlignment="Top">
+                                        <Button.Style>
+                                            <Style TargetType="Button" BasedOn="{StaticResource IconButtonStyle}">
+                                                <Setter Property="Visibility" Value="Visible" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding LocalPath}" Value="{x:Null}">
+                                                        <Setter Property="Visibility" Value="Collapsed" />
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding LocalPath}" Value="">
+                                                        <Setter Property="Visibility" Value="Collapsed" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Button.Style>
+                                        <TextBlock Text="&#xE838;" FontFamily="Segoe MDL2 Assets" FontSize="16" />
+                                    </Button>
+
+                                    <!-- Metadata Row -->
+                                    <StackPanel Grid.Row="2" Grid.Column="2" Orientation="Horizontal">
+                                        <TextBlock Text="{Binding Format, StringFormat='Format: {0}'}" 
+                                                   FontSize="11" Foreground="#7E899A" Margin="0,0,16,0">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Visibility" Value="Visible" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding Format}" Value="{x:Null}">
+                                                            <Setter Property="Visibility" Value="Collapsed" />
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding Format}" Value="">
+                                                            <Setter Property="Visibility" Value="Collapsed" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                        <TextBlock Text="{Binding Quality, StringFormat='Quality: {0}'}" 
+                                                   FontSize="11" Foreground="#7E899A" Margin="0,0,16,0">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Visibility" Value="Visible" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding Quality}" Value="{x:Null}">
+                                                            <Setter Property="Visibility" Value="Collapsed" />
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding Quality}" Value="">
+                                                            <Setter Property="Visibility" Value="Collapsed" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                        <TextBlock Text="{Binding FileSize, Converter={StaticResource FileSizeConverter}}" Margin="0,0,16,0"
+                                                   FontSize="11" Foreground="#7E899A">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Visibility" Value="Visible" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding FileSize}" Value="{x:Null}">
+                                                            <Setter Property="Visibility" Value="Collapsed" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                        <TextBlock Text="{Binding CreatedAt, StringFormat='Started: {0:g}'}" 
+                                                   FontSize="11" Foreground="#7E899A" />
+                                    </StackPanel>
+
+                                    <!-- Error Message -->
+                                    <Border Grid.Row="4" Grid.Column="2" Grid.ColumnSpan="2" Margin="0,8,0,0"
+                                            Background="#2D1B1E" BorderBrush="#7F1D1D" BorderThickness="1"
+                                            CornerRadius="4" Padding="8">
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Setter Property="Visibility" Value="Visible" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding ErrorMessage}" Value="{x:Null}">
+                                                        <Setter Property="Visibility" Value="Collapsed" />
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding ErrorMessage}" Value="">
+                                                        <Setter Property="Visibility" Value="Collapsed" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
+                                        <Grid>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="4" />
+                                                <RowDefinition Height="Auto" />
+                                            </Grid.RowDefinitions>
+                                            <TextBlock Grid.Row="0" Text="⚠ Error Details" 
+                                                       FontSize="11" FontWeight="SemiBold" 
+                                                       Foreground="#FCA5A5" />
+                                            <TextBlock Grid.Row="2" Text="{Binding ErrorMessage}"
+                                                       FontSize="11" FontFamily="Consolas"
+                                                       Foreground="#FEF2F2" TextWrapping="Wrap"
+                                                       MaxHeight="100" TextTrimming="CharacterEllipsis">
+                                                <TextBlock.ToolTip>
+                                                    <ToolTip MaxWidth="600">
+                                                        <TextBlock Text="{Binding ErrorMessage}" 
+                                                                   TextWrapping="Wrap" 
+                                                                   FontFamily="Consolas" 
+                                                                   FontSize="11" />
+                                                    </ToolTip>
+                                                </TextBlock.ToolTip>
+                                            </TextBlock>
+                                        </Grid>
+                                    </Border>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </Border>
+        </Grid>
+
         <!-- Footer with Dependency Status -->
         <Border Grid.Row="2" Background="#151922" BorderBrush="#252B38" BorderThickness="0,1,0,0" Padding="28,12">
             <ItemsControl ItemsSource="{Binding Dependencies}">
@@ -279,5 +637,76 @@
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
         </Border>
+
+        <!-- Sliding Menu Panel -->
+        <Border x:Name="MenuPanel" 
+                Grid.Row="0" Grid.RowSpan="3"
+                Width="320" 
+                HorizontalAlignment="Right"
+                Background="#151922" 
+                BorderBrush="#252B38" 
+                BorderThickness="1,0,0,0"
+                Panel.ZIndex="100">
+            <Border.RenderTransform>
+                <TranslateTransform X="320" />
+            </Border.RenderTransform>
+
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <!-- Menu Header -->
+                <Border Grid.Row="0" Background="#1D2635" BorderBrush="#252B38" BorderThickness="0,0,0,1" Padding="20,16">
+                    <Grid>
+                        <TextBlock Text="Menu" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center" />
+                        <Button HorizontalAlignment="Right" 
+                                Width="32" Height="32"
+                                Style="{StaticResource IconButtonStyle}"
+                                Click="CloseMenuButton_Click"
+                                ToolTip="Close">
+                            <TextBlock Text="&#xE10A;" FontFamily="Segoe MDL2 Assets" FontSize="16" />
+                        </Button>
+                    </Grid>
+                </Border>
+
+                <!-- Menu Items -->
+                <StackPanel Grid.Row="1" Margin="0,12,0,0">
+                    <Button x:Name="QueueListButton" 
+                            Height="52" 
+                            Padding="20,0"
+                            HorizontalContentAlignment="Left"
+                            Style="{StaticResource MenuItemButtonStyle}"
+                            Click="QueueListButton_Click">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE8FD;" FontFamily="Segoe MDL2 Assets" FontSize="20" VerticalAlignment="Center" />
+                            <TextBlock Text="Queue List" FontSize="15" Margin="16,0,0,0" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+
+                    <Button x:Name="HistoryButton" 
+                            Height="52" 
+                            Padding="20,0"
+                            HorizontalContentAlignment="Left"
+                            Style="{StaticResource MenuItemButtonStyle}"
+                            Click="HistoryButton_Click">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE81C;" FontFamily="Segoe MDL2 Assets" FontSize="20" VerticalAlignment="Center" />
+                            <TextBlock Text="Download History" FontSize="15" Margin="16,0,0,0" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Overlay for closing menu -->
+        <Border x:Name="MenuOverlay" 
+                Grid.Row="0" Grid.RowSpan="3"
+                Background="#80000000" 
+                Opacity="0"
+                IsHitTestVisible="False"
+                Panel.ZIndex="99"
+                MouseDown="MenuOverlay_MouseDown" />
     </Grid>
 </Window>

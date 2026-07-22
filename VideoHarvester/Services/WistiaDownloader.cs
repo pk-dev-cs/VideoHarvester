@@ -28,7 +28,24 @@ internal static class WistiaDownloader
             }
 
             using JsonDocument document = JsonDocument.Parse(match.Groups[1].Value);
-            string? videoUrl = document.RootElement.GetProperty("assets")[0].GetProperty("url").GetString();
+            var root = document.RootElement;
+
+            // Extract metadata
+            if (root.TryGetProperty("name", out var nameElement))
+            {
+                video.Title = nameElement.GetString();
+            }
+
+            if (root.TryGetProperty("assets", out var assetsElement) && assetsElement.GetArrayLength() > 0)
+            {
+                var firstAsset = assetsElement[0];
+                if (firstAsset.TryGetProperty("display_name", out var displayNameElement))
+                {
+                    video.Quality = displayNameElement.GetString();
+                }
+            }
+
+            string? videoUrl = root.GetProperty("assets")[0].GetProperty("url").GetString();
             if (string.IsNullOrWhiteSpace(videoUrl))
             {
                 video.Status = "Failed";
