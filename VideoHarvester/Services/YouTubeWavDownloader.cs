@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using VideoHarvester.Models;
 
@@ -56,6 +57,9 @@ internal static class YouTubeWavDownloader
 
         try
         {
+            // First, extract metadata
+            await ExtractMetadata(video, nodePath);
+
             video.Status = "Downloading";
             process.Start();
             process.BeginOutputReadLine();
@@ -126,5 +130,62 @@ internal static class YouTubeWavDownloader
             return process.ExitCode == 0;
         }
         catch (Exception) { return false; }
+    }
+
+    private static async Task ExtractMetadata(Video video, string nodePath)
+    {
+        try
+        {
+            var startInfo = new ProcessStartInfo
+            {
+                FileName = "python",
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
+
+            string[] arguments =
+            [
+                "-m", "yt_dlp", video.VideoId,
+                "--js-runtimes", $"node:{nodePath}",
+                "--cookies-from-browser", "firefox",
+                "--dump-json",
+                "--no-playlist"
+            ];
+
+            foreach (string argument in arguments)
+                startInfo.ArgumentList.Add(argument);
+
+            using var process = new Process { StartInfo = startInfo };
+            process.Start();
+
+            var output = await process.StandardOutput.ReadToEndAsync();
+            await process.WaitForExitAsync();
+
+            if (process.ExitCode == 0 && !string.IsNullOrWhiteSpace(output))
+            {
+                var json = JsonDocument.Parse(output);
+                var root = json.RootElement;
+
+                if (root.TryGetProperty("title", out var titleElement))
+                {
+                    video.Title = titleElement.GetString();
+                }
+
+                if (root.TryGetProperty("format", out var formatElement))
+                {
+                    video.Quality = formatElement.GetString();
+                }
+                else if (root.TryGetProperty("format_id", out var formatIdElement))
+                {
+                    video.Quality = formatIdElement.GetString();
+                }
+            }
+        }
+        catch
+        {
+            // If metadata extraction fails, continue without it
+        }
     }
 }
