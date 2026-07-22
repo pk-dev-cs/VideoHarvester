@@ -26,13 +26,18 @@ namespace VideoHarvester
 
 
             services.AddSingleton<IDownloadVideoService, DownloadVideoService>();
+            services.AddSingleton<IDownloadHistoryService, DownloadHistoryService>();
             services.AddSingleton<MainWindowViewModel, MainWindowViewModel>();
 
             return services.BuildServiceProvider();
         }
 
-        private void Application_Startup(object sender, StartupEventArgs e)
+        private async void Application_Startup(object sender, StartupEventArgs e)
         {
+            // Initialize database
+            var historyService = Services.GetRequiredService<IDownloadHistoryService>();
+            await historyService.InitializeDatabaseAsync();
+
             // Create and show main window first (but don't show it yet)
             var mainWindow = new MainWindow();
             Application.Current.MainWindow = mainWindow;

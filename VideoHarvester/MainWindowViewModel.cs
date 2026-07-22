@@ -17,6 +17,7 @@ public partial class MainWindowViewModel : ObservableObject
     private static int Order = 0;
 
     private readonly IDownloadVideoService _downloadVideoService;
+    private readonly IDownloadHistoryService _historyService;
     private bool _isDownloading = false;
 
     [ObservableProperty]
@@ -25,15 +26,21 @@ public partial class MainWindowViewModel : ObservableObject
     [ObservableProperty]
     private VideoSource selectedSource = VideoSource.Wistia;
 
+    [ObservableProperty]
+    private bool isQueueView = true;
+
     public IReadOnlyList<VideoSource> AvailableSources { get; } = Enum.GetValues<VideoSource>();
 
     public ObservableCollection<Video> DownloadQueue { get; } = [];
 
+    public ObservableCollection<DownloadHistory> DownloadHistory { get; } = [];
+
     public ObservableCollection<DependencyStatus> Dependencies { get; } = [];
 
-    public MainWindowViewModel(IDownloadVideoService downloadVideoService)
+    public MainWindowViewModel(IDownloadVideoService downloadVideoService, IDownloadHistoryService historyService)
     {
         _downloadVideoService = downloadVideoService;
+        _historyService = historyService;
         _ = InitializeDependencies();
     }
 
@@ -135,5 +142,22 @@ public partial class MainWindowViewModel : ObservableObject
         }
 
         _isDownloading = false;
+    }
+
+    [RelayCommand]
+    public async Task LoadHistory()
+    {
+        DownloadHistory.Clear();
+        var history = await _historyService.GetAllDownloadsAsync();
+        foreach (var item in history)
+        {
+            DownloadHistory.Add(item);
+        }
+    }
+
+    [RelayCommand]
+    public async Task RefreshHistory()
+    {
+        await LoadHistory();
     }
 }
