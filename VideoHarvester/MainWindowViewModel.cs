@@ -29,6 +29,9 @@ public partial class MainWindowViewModel : ObservableObject
     [ObservableProperty]
     private bool isQueueView = true;
 
+    [ObservableProperty]
+    private bool useOrderNumeration = false;
+
     public IReadOnlyList<VideoSource> AvailableSources { get; } = Enum.GetValues<VideoSource>();
 
     public ObservableCollection<Video> DownloadQueue { get; } = [];
@@ -103,7 +106,7 @@ public partial class MainWindowViewModel : ObservableObject
             return;
         }
 
-        var video = new Video { Order = ++Order, VideoId = videoReference, Source = SelectedSource, Progress = 0 };
+        var video = new Video { Order = ++Order, VideoId = videoReference, Source = SelectedSource, Progress = 0, UseOrderNumeration = useOrderNumeration };
         DownloadQueue.Add(video);
 
         WeakReferenceMessenger.Default.Send(new FolderOpenedMessage());

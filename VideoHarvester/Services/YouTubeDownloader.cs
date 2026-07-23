@@ -41,6 +41,8 @@ internal static class YouTubeDownloader
             CreateNoWindow = true
         };
 
+        string outputFileName = video.UseOrderNumeration ? $"{video.Order}_{video.FileId}" : video.FileId;
+
         string[] arguments =
         [
             "-m", "yt_dlp", video.VideoId,
@@ -51,7 +53,7 @@ internal static class YouTubeDownloader
             "--merge-output-format", "mkv",
             "--remux-video", "mkv",
             "--no-playlist",
-            "-o", $"{video.Order}.%(ext)s",
+            "-o", $"{outputFileName}.%(ext)s",
             "--windows-filenames", "--progress", "--newline"
         ];
 

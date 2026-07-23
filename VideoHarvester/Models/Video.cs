@@ -16,6 +16,8 @@ public class Video : INotifyPropertyChanged
     public required string VideoId { get; set; }
     public required VideoSource Source { get; set; }
     public int Order { get; set; }
+    public string FileId { get; set; } = Guid.NewGuid().ToString("N")[..8];
+    public bool UseOrderNumeration { get; set; }
 
     public string? Title
     {
@@ -77,7 +79,20 @@ public class Video : INotifyPropertyChanged
         }
     }
 
-    public string FilePath => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyVideos), $"{Order}.{Source switch { VideoSource.YouTube => "mkv", VideoSource.YouTubeWav => "wav", _ => "mp4" }}");
+    public string FilePath
+    {
+        get
+        {
+            string fileName = UseOrderNumeration ? $"{Order}_{FileId}" : FileId;
+            string extension = Source switch
+            {
+                VideoSource.YouTube => "mkv",
+                VideoSource.YouTubeWav => "wav",
+                _ => "mp4"
+            };
+            return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyVideos), $"{fileName}.{extension}");
+        }
+    }
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
