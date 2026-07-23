@@ -33,6 +33,8 @@ internal static class YouTubeWavDownloader
             CreateNoWindow = true
         };
 
+        string outputFileName = video.UseOrderNumeration ? $"{video.Order}_{video.FileId}" : video.FileId;
+
         string[] arguments =
         [
             "-m", "yt_dlp", video.VideoId,
@@ -43,7 +45,7 @@ internal static class YouTubeWavDownloader
             "--extract-audio",
             "--audio-format", "wav",
             "--no-playlist",
-            "-o", $"{video.Order}.%(ext)s",
+            "-o", $"{outputFileName}.%(ext)s",
             "--windows-filenames",
             "--newline", "--progress", "--verbose"
         ];
