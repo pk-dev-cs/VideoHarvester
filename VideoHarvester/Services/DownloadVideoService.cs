@@ -6,7 +6,7 @@ namespace VideoHarvester.Services;
 
 public interface IDownloadVideoService
 {
-    Task DownloadVideo(Video video);
+    Task DownloadVideo(Video video, CancellationToken cancellationToken = default);
 }
 
 public class DownloadVideoService : IDownloadVideoService
@@ -18,7 +18,7 @@ public class DownloadVideoService : IDownloadVideoService
         _historyService = historyService;
     }
 
-    public async Task DownloadVideo(Video video)
+    public async Task DownloadVideo(Video video, CancellationToken cancellationToken = default)
     {
         // Convert thumbnail to bytes if available
         byte[]? thumbnailBytes = null;
@@ -47,12 +47,15 @@ public class DownloadVideoService : IDownloadVideoService
 
         try
         {
+            // Check if already cancelled
+            cancellationToken.ThrowIfCancellationRequested();
+
             // Download the video
             await (video.Source switch
             {
-                VideoSource.YouTube => YouTubeDownloader.Download(video),
-                VideoSource.YouTubeWav => YouTubeWavDownloader.Download(video),
-                VideoSource.Wistia => WistiaDownloader.Download(video),
+                VideoSource.YouTube => YouTubeDownloader.Download(video, cancellationToken),
+                VideoSource.YouTubeWav => YouTubeWavDownloader.Download(video, cancellationToken),
+                VideoSource.Wistia => WistiaDownloader.Download(video, cancellationToken),
                 _ => throw new ArgumentOutOfRangeException(nameof(video.Source), video.Source, "Unsupported video source.")
             });
 
@@ -78,6 +81,14 @@ public class DownloadVideoService : IDownloadVideoService
             }
 
             await _historyService.UpdateDownloadAsync(history);
+        }
+        catch (OperationCanceledException)
+        {
+            // Update history on cancellation
+            history.Status = "Cancelled";
+            history.FinishedAt = DateTime.Now;
+            await _historyService.UpdateDownloadAsync(history);
+            throw;
         }
         catch (Exception ex)
         {
