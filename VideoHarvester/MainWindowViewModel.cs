@@ -19,6 +19,7 @@ public partial class MainWindowViewModel : ObservableObject
     private readonly IDownloadVideoService _downloadVideoService;
     private readonly IDownloadHistoryService _historyService;
     private bool _isDownloading = false;
+    private readonly Dictionary<Video, CancellationTokenSource> _downloadCancellations = new();
 
     [ObservableProperty]
     private string? videoId = "";
@@ -131,6 +132,20 @@ public partial class MainWindowViewModel : ObservableObject
             System.Diagnostics.Process.Start("explorer.exe", folderPath);
     }
 
+    [RelayCommand]
+    public void RemoveFromQueue(Video video)
+    {
+        // If video is currently downloading, cancel it
+        if (_downloadCancellations.TryGetValue(video, out var cts))
+        {
+            cts.Cancel();
+            _downloadCancellations.Remove(video);
+            video.Status = "Cancelled";
+        }
+
+        DownloadQueue.Remove(video);
+    }
+
     private async void ProcessQueue()
     {
         if (_isDownloading)
@@ -141,7 +156,21 @@ public partial class MainWindowViewModel : ObservableObject
         while (DownloadQueue.Any(v => v.Status == "Queued"))
         {
             var video = DownloadQueue.First(v => v.Status == "Queued");
-            await _downloadVideoService.DownloadVideo(video);
+            var cts = new CancellationTokenSource();
+            _downloadCancellations[video] = cts;
+
+            try
+            {
+                await _downloadVideoService.DownloadVideo(video, cts.Token);
+            }
+            catch (OperationCanceledException)
+            {
+                video.Status = "Cancelled";
+            }
+            finally
+            {
+                _downloadCancellations.Remove(video);
+            }
         }
 
         _isDownloading = false;

@@ -289,20 +289,37 @@
                                                         <DataTrigger Binding="{Binding Quality}" Value="">
                                                             <Setter Property="Visibility" Value="Collapsed" />
                                                         </DataTrigger>
-                                                    </Style.Triggers>
+                                                    </Style.Triggers>   
                                                 </Style>
                                             </TextBlock.Style>
                                         </TextBlock>
                                     </StackPanel>
 
-                                    <Button Grid.Row="0" Grid.Column="3" Grid.RowSpan="3"
-                                            Width="38" Height="38" ToolTip="Open containing folder"
-                                            Visibility="{Binding Status, Converter={StaticResource ButtonVisibilityConverter}}"
-                                            Command="{Binding DataContext.OpenFolderCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                            CommandParameter="{Binding FilePath}"
-                                            Style="{StaticResource IconButtonStyle}">
-                                        <TextBlock Text="&#xE838;" FontFamily="Segoe MDL2 Assets" FontSize="16" />
-                                    </Button>
+                                    <!-- Action buttons stack -->
+                                    <StackPanel Grid.Row="0" Grid.Column="3" Grid.RowSpan="3"
+                                                Orientation="Horizontal"
+                                                HorizontalAlignment="Right"
+                                                VerticalAlignment="Top">
+                                        <!-- Remove button (X icon) -->
+                                        <Button Width="38" Height="38" 
+                                                ToolTip="Remove from queue"
+                                                Command="{Binding DataContext.RemoveFromQueueCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                CommandParameter="{Binding}"
+                                                Style="{StaticResource IconButtonStyle}">
+                                            <TextBlock Text="&#xE711;" FontFamily="Segoe MDL2 Assets" FontSize="14" />
+                                        </Button>
+
+                                        <!-- Open folder button -->
+                                        <Button Width="38" Height="38" 
+                                                Margin="6,0,0,0"
+                                                ToolTip="Open containing folder"
+                                                Visibility="{Binding Status, Converter={StaticResource ButtonVisibilityConverter}}"
+                                                Command="{Binding DataContext.OpenFolderCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                CommandParameter="{Binding FilePath}"
+                                                Style="{StaticResource IconButtonStyle}">
+                                            <TextBlock Text="&#xE838;" FontFamily="Segoe MDL2 Assets" FontSize="16" />
+                                        </Button>
+                                    </StackPanel>
 
                                     <ProgressBar Grid.Row="2" Grid.Column="2" Grid.ColumnSpan="2" Height="6" Maximum="100" Value="{Binding Progress}" />
 

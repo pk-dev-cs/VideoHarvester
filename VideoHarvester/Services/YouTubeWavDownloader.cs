@@ -9,7 +9,7 @@ namespace VideoHarvester.Services;
 
 internal static class YouTubeWavDownloader
 {
-    public static async Task Download(Video video)
+    public static async Task Download(Video video, CancellationToken cancellationToken = default)
     {
         video.Status = "Preparing";
 
@@ -62,11 +62,14 @@ internal static class YouTubeWavDownloader
             // First, extract metadata
             await ExtractMetadata(video, nodePath);
 
+            // Check cancellation before starting download
+            cancellationToken.ThrowIfCancellationRequested();
+
             video.Status = "Downloading";
             process.Start();
             process.BeginOutputReadLine();
             process.BeginErrorReadLine();
-            await process.WaitForExitAsync();
+            await process.WaitForExitAsync(cancellationToken);
 
             if (process.ExitCode == 0 && File.Exists(video.FilePath))
             {
@@ -77,6 +80,20 @@ internal static class YouTubeWavDownloader
             {
                 video.Status = "Failed";
             }
+        }
+        catch (OperationCanceledException)
+        {
+            try
+            {
+                if (!process.HasExited)
+                {
+                    process.Kill(true);
+                }
+            }
+            catch { /* Ignore errors when killing process */ }
+
+            video.Status = "Cancelled";
+            throw;
         }
         catch (Exception)
         {
