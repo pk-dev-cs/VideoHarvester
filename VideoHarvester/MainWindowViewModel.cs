@@ -192,4 +192,13 @@ public partial class MainWindowViewModel : ObservableObject
     {
         await LoadHistory();
     }
+
+    [RelayCommand]
+    public static void CopyErrorToClipboard(string errorMessage)
+    {
+        if (!string.IsNullOrEmpty(errorMessage))
+        {
+            Clipboard.SetText(errorMessage);
+        }
+    }
 }
