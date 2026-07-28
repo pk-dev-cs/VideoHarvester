@@ -353,10 +353,23 @@
                                                 <RowDefinition Height="4" />
                                                 <RowDefinition Height="Auto" />
                                             </Grid.RowDefinitions>
-                                            <TextBlock Grid.Row="0" Text="⚠ Error Details" 
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Row="0" Grid.Column="0" Text="⚠ Error Details" 
                                                        FontSize="11" FontWeight="SemiBold" 
                                                        Foreground="#FCA5A5" />
-                                            <TextBlock Grid.Row="2" Text="{Binding ErrorMessage}"
+                                            <Button Grid.Row="0" Grid.Column="1"
+                                                    Width="24" Height="24"
+                                                    ToolTip="Copy error to clipboard"
+                                                    Command="{Binding DataContext.CopyErrorToClipboardCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                    CommandParameter="{Binding ErrorMessage}"
+                                                    Style="{StaticResource IconButtonStyle}"
+                                                    Padding="0">
+                                                <TextBlock Text="&#xE8C8;" FontFamily="Segoe MDL2 Assets" FontSize="12" />
+                                            </Button>
+                                            <TextBlock Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Text="{Binding ErrorMessage}"
                                                        FontSize="11" FontFamily="Consolas"
                                                        Foreground="#FEF2F2" TextWrapping="Wrap"
                                                        MaxHeight="200" TextTrimming="CharacterEllipsis">
@@ -641,10 +654,23 @@
                                                 <RowDefinition Height="4" />
                                                 <RowDefinition Height="Auto" />
                                             </Grid.RowDefinitions>
-                                            <TextBlock Grid.Row="0" Text="⚠ Error Details" 
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Row="0" Grid.Column="0" Text="⚠ Error Details" 
                                                        FontSize="11" FontWeight="SemiBold" 
                                                        Foreground="#FCA5A5" />
-                                            <TextBlock Grid.Row="2" Text="{Binding ErrorMessage}"
+                                            <Button Grid.Row="0" Grid.Column="1"
+                                                    Width="24" Height="24"
+                                                    ToolTip="Copy error to clipboard"
+                                                    Command="{Binding DataContext.CopyErrorToClipboardCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                    CommandParameter="{Binding ErrorMessage}"
+                                                    Style="{StaticResource IconButtonStyle}"
+                                                    Padding="0">
+                                                <TextBlock Text="&#xE8C8;" FontFamily="Segoe MDL2 Assets" FontSize="12" />
+                                            </Button>
+                                            <TextBlock Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Text="{Binding ErrorMessage}"
                                                        FontSize="11" FontFamily="Consolas"
                                                        Foreground="#FEF2F2" TextWrapping="Wrap"
                                                        MaxHeight="100" TextTrimming="CharacterEllipsis">
