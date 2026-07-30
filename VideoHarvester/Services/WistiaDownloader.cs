@@ -56,20 +56,29 @@ internal static class WistiaDownloader
             using HttpResponseMessage videoResponse = await client.GetAsync(videoUrl, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
             videoResponse.EnsureSuccessStatusCode();
             await using Stream videoStream = await videoResponse.Content.ReadAsStreamAsync(cancellationToken);
-            await using FileStream fileStream = new(video.FilePath, FileMode.Create, FileAccess.Write, FileShare.None);
 
             byte[] buffer = new byte[8192];
             long totalBytes = videoResponse.Content.Headers.ContentLength ?? -1;
             long receivedBytes = 0;
             int bytesRead;
 
-            while ((bytesRead = await videoStream.ReadAsync(buffer, cancellationToken)) > 0)
+            // Write to file in a separate scope to ensure file is closed
             {
-                await fileStream.WriteAsync(buffer.AsMemory(0, bytesRead), cancellationToken);
-                receivedBytes += bytesRead;
-                if (totalBytes > 0)
-                    video.Progress = (int)(receivedBytes * 100 / totalBytes);
+                await using FileStream fileStream = new(video.FilePath, FileMode.Create, FileAccess.Write, FileShare.None);
+
+                while ((bytesRead = await videoStream.ReadAsync(buffer, cancellationToken)) > 0)
+                {
+                    await fileStream.WriteAsync(buffer.AsMemory(0, bytesRead), cancellationToken);
+                    receivedBytes += bytesRead;
+                    if (totalBytes > 0)
+                        video.Progress = (int)(receivedBytes * 100 / totalBytes);
+                }
+
+                await fileStream.FlushAsync(cancellationToken);
             }
+
+            // Small delay to ensure file handle is released by the OS
+            await Task.Delay(100, cancellationToken);
 
             video.Progress = 100;
             video.Status = "Downloaded";
