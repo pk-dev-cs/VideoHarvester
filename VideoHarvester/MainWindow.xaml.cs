@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using System.Windows;
 using System.Windows.Media.Animation;
 using VideoHarvester.Messages;
+using WpfApplication = System.Windows.Application;
 
 namespace VideoHarvester;
 
@@ -17,7 +18,7 @@ public partial class MainWindow : Window
 
         WeakReferenceMessenger.Default.Register<FolderOpenedMessage>(this, (r, message) =>
         {
-            Application.Current.Dispatcher.Invoke(() => VideoIdTextBox.Clear());
+            WpfApplication.Current.Dispatcher.Invoke(() => VideoIdTextBox.Clear());
         });
     }
 
@@ -43,6 +44,7 @@ public partial class MainWindow : Window
         if (viewModel != null)
         {
             viewModel.IsQueueView = true;
+            viewModel.IsSettingsView = false;
         }
         CloseMenu();
     }
@@ -54,7 +56,19 @@ public partial class MainWindow : Window
         if (viewModel != null)
         {
             viewModel.IsQueueView = false;
+            viewModel.IsSettingsView = false;
             _ = viewModel.LoadHistoryCommand.ExecuteAsync(null);
+        }
+        CloseMenu();
+    }
+
+    private void SettingsButton_Click(object sender, RoutedEventArgs e)
+    {
+        var viewModel = DataContext as MainWindowViewModel;
+        if (viewModel != null)
+        {
+            viewModel.IsQueueView = false;
+            viewModel.IsSettingsView = true;
         }
         CloseMenu();
     }

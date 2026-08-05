@@ -9,6 +9,7 @@ using System.Windows;
 using VideoHarvester.Messages;
 using VideoHarvester.Models;
 using VideoHarvester.Services;
+using HtmlDocument = HtmlAgilityPack.HtmlDocument;
 
 namespace VideoHarvester;
 
@@ -18,6 +19,7 @@ public partial class MainWindowViewModel : ObservableObject
 
     private readonly IDownloadVideoService _downloadVideoService;
     private readonly IDownloadHistoryService _historyService;
+    private readonly ISettingsService _settingsService;
     private bool _isDownloading = false;
     private readonly Dictionary<Video, CancellationTokenSource> _downloadCancellations = new();
 
@@ -31,6 +33,9 @@ public partial class MainWindowViewModel : ObservableObject
     private bool isQueueView = true;
 
     [ObservableProperty]
+    private bool isSettingsView = false;
+
+    [ObservableProperty]
     private bool useOrderNumeration = false;
 
     public IReadOnlyList<VideoSource> AvailableSources { get; } = Enum.GetValues<VideoSource>();
@@ -41,10 +46,14 @@ public partial class MainWindowViewModel : ObservableObject
 
     public ObservableCollection<DependencyStatus> Dependencies { get; } = [];
 
-    public MainWindowViewModel(IDownloadVideoService downloadVideoService, IDownloadHistoryService historyService)
+    public SettingsViewModel Settings { get; }
+
+    public MainWindowViewModel(IDownloadVideoService downloadVideoService, IDownloadHistoryService historyService, ISettingsService settingsService, SettingsViewModel settingsViewModel)
     {
         _downloadVideoService = downloadVideoService;
         _historyService = historyService;
+        _settingsService = settingsService;
+        Settings = settingsViewModel;
         _ = InitializeDependencies();
     }
 
@@ -103,11 +112,11 @@ public partial class MainWindowViewModel : ObservableObject
 
         if (string.IsNullOrWhiteSpace(videoReference))
         {
-            MessageBox.Show(SelectedSource == VideoSource.Wistia ? "Please enter a page address containing a Wistia video." : "Please enter a valid YouTube video URL.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            System.Windows.MessageBox.Show(SelectedSource == VideoSource.Wistia ? "Please enter a page address containing a Wistia video." : "Please enter a valid YouTube video URL.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             return;
         }
 
-        var video = new Video { Order = ++Order, VideoId = videoReference, Source = SelectedSource, Progress = 0, UseOrderNumeration = useOrderNumeration };
+        var video = new Video { Order = ++Order, VideoId = videoReference, Source = SelectedSource, Progress = 0, UseOrderNumeration = UseOrderNumeration };
         DownloadQueue.Add(video);
 
         WeakReferenceMessenger.Default.Send(new FolderOpenedMessage());
@@ -198,7 +207,7 @@ public partial class MainWindowViewModel : ObservableObject
     {
         if (!string.IsNullOrEmpty(errorMessage))
         {
-            Clipboard.SetText(errorMessage);
+            System.Windows.Clipboard.SetText(errorMessage);
         }
     }
 }
