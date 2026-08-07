@@ -18,6 +18,9 @@ public class Video : INotifyPropertyChanged
     public int Order { get; set; }
     public string FileId { get; set; } = Guid.NewGuid().ToString("N")[..8];
     public bool UseOrderNumeration { get; set; }
+    public string DownloadDirectory { get; set; } = Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.MyVideos),
+        "VideoHarvester");
 
     public string? Title
     {
@@ -90,7 +93,7 @@ public class Video : INotifyPropertyChanged
                 VideoSource.YouTubeWav => "wav",
                 _ => "mp4"
             };
-            return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyVideos), $"{fileName}.{extension}");
+            return Path.Combine(DownloadDirectory, $"{fileName}.{extension}");
         }
     }
 
