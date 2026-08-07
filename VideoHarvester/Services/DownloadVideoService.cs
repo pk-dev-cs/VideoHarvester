@@ -50,6 +50,8 @@ public class DownloadVideoService : IDownloadVideoService
             // Check if already cancelled
             cancellationToken.ThrowIfCancellationRequested();
 
+            Directory.CreateDirectory(video.DownloadDirectory);
+
             // Download the video
             await (video.Source switch
             {

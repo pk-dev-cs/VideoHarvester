@@ -116,7 +116,15 @@ public partial class MainWindowViewModel : ObservableObject
             return;
         }
 
-        var video = new Video { Order = ++Order, VideoId = videoReference, Source = SelectedSource, Progress = 0, UseOrderNumeration = UseOrderNumeration };
+        var video = new Video
+        {
+            Order = ++Order,
+            VideoId = videoReference,
+            Source = SelectedSource,
+            Progress = 0,
+            UseOrderNumeration = UseOrderNumeration,
+            DownloadDirectory = ResolveDownloadDirectory(Settings.DefaultDownloadPath)
+        };
         DownloadQueue.Add(video);
 
         WeakReferenceMessenger.Default.Send(new FolderOpenedMessage());
@@ -131,6 +139,13 @@ public partial class MainWindowViewModel : ObservableObject
         string host = uri.Host.ToLowerInvariant();
         bool valid = host == "youtu.be" || host == "youtube.com" || host.EndsWith(".youtube.com", StringComparison.Ordinal) || host == "youtube-nocookie.com" || host.EndsWith(".youtube-nocookie.com", StringComparison.Ordinal);
         return valid ? uri.AbsoluteUri : null;
+    }
+
+    private static string ResolveDownloadDirectory(string? configuredPath)
+    {
+        return string.IsNullOrWhiteSpace(configuredPath)
+            ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyVideos), "VideoHarvester")
+            : Path.GetFullPath(configuredPath.Trim());
     }
 
     [RelayCommand]
