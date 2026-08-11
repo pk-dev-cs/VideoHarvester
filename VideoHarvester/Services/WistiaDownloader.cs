@@ -36,23 +36,29 @@ internal static class WistiaDownloader
                 video.Title = nameElement.GetString();
             }
 
-            if (root.TryGetProperty("assets", out var assetsElement) && assetsElement.GetArrayLength() > 0)
-            {
-                var firstAsset = assetsElement[0];
-                if (firstAsset.TryGetProperty("display_name", out var displayNameElement))
-                {
-                    video.Quality = displayNameElement.GetString();
-                }
-            }
-
-            string? videoUrl = root.GetProperty("assets")[0].GetProperty("url").GetString();
-            if (string.IsNullOrWhiteSpace(videoUrl))
+            if (!root.TryGetProperty("assets", out var assetsElement) || assetsElement.GetArrayLength() == 0)
             {
                 video.Status = "Failed";
+                video.ErrorMessage = "Wistia did not return any downloadable video assets.";
                 return;
             }
 
-            videoUrl = videoUrl.Replace(".bin", ".mp4");
+            JsonElement? selectedAsset = SelectVideoAsset(assetsElement, video.PreferredQuality);
+            if (selectedAsset is null ||
+                !selectedAsset.Value.TryGetProperty("url", out var urlElement) ||
+                string.IsNullOrWhiteSpace(urlElement.GetString()))
+            {
+                video.Status = "Failed";
+                video.ErrorMessage = $"No Wistia video asset is available for quality {video.PreferredQuality}.";
+                return;
+            }
+
+            int selectedHeight = GetAssetHeight(selectedAsset.Value);
+            video.Quality = selectedAsset.Value.TryGetProperty("display_name", out var displayNameElement)
+                ? displayNameElement.GetString()
+                : selectedHeight > 0 ? $"{selectedHeight}p" : video.PreferredQuality;
+
+            string videoUrl = urlElement.GetString()!.Replace(".bin", ".mp4");
             using HttpResponseMessage videoResponse = await client.GetAsync(videoUrl, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
             videoResponse.EnsureSuccessStatusCode();
             await using Stream videoStream = await videoResponse.Content.ReadAsStreamAsync(cancellationToken);
@@ -97,6 +103,72 @@ internal static class WistiaDownloader
         }
     }
 
+    private static JsonElement? SelectVideoAsset(JsonElement assets, string preferredQuality)
+    {
+        int? maximumHeight = VideoQualitySelector.GetMaximumHeight(preferredQuality);
+        JsonElement? bestMatch = null;
+        int bestMatchHeight = -1;
+        JsonElement? lowestQuality = null;
+        int lowestHeight = int.MaxValue;
+
+        foreach (JsonElement asset in assets.EnumerateArray())
+        {
+            if (!asset.TryGetProperty("url", out var urlElement) ||
+                string.IsNullOrWhiteSpace(urlElement.GetString()) ||
+                IsNonVideoAsset(asset))
+            {
+                continue;
+            }
+
+            int height = GetAssetHeight(asset);
+            if (height <= 0)
+                continue;
+
+            if (height < lowestHeight)
+            {
+                lowestHeight = height;
+                lowestQuality = asset;
+            }
+
+            if ((maximumHeight is null || height <= maximumHeight) && height > bestMatchHeight)
+            {
+                bestMatchHeight = height;
+                bestMatch = asset;
+            }
+        }
+
+        return bestMatch ?? lowestQuality;
+    }
+
+    private static bool IsNonVideoAsset(JsonElement asset)
+    {
+        if (!asset.TryGetProperty("type", out var typeElement))
+            return false;
+
+        string type = typeElement.GetString() ?? string.Empty;
+        return type.Contains("image", StringComparison.OrdinalIgnoreCase) ||
+               type.Contains("still", StringComparison.OrdinalIgnoreCase) ||
+               type.Contains("storyboard", StringComparison.OrdinalIgnoreCase) ||
+               type.Contains("audio", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static int GetAssetHeight(JsonElement asset)
+    {
+        if (asset.TryGetProperty("height", out var heightElement) &&
+            heightElement.TryGetInt32(out int height))
+        {
+            return height;
+        }
+
+        if (asset.TryGetProperty("display_name", out var displayNameElement))
+        {
+            Match match = Regex.Match(displayNameElement.GetString() ?? string.Empty, @"(?<height>\d{3,4})p");
+            if (match.Success && int.TryParse(match.Groups["height"].Value, out height))
+                return height;
+        }
+
+        return 0;
+    }
     private static async Task ExtractThumbnail(Video video)
     {
         try
