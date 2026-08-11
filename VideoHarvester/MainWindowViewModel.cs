@@ -123,6 +123,7 @@ public partial class MainWindowViewModel : ObservableObject
             Source = SelectedSource,
             Progress = 0,
             UseOrderNumeration = UseOrderNumeration,
+            PreferredQuality = Settings.PreferredVideoQuality,
             DownloadDirectory = ResolveDownloadDirectory(Settings.DefaultDownloadPath)
         };
         DownloadQueue.Add(video);

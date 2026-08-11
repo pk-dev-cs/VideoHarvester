@@ -42,13 +42,14 @@ internal static class YouTubeDownloader
         };
 
         string outputFileName = video.UseOrderNumeration ? $"{video.Order}_{video.FileId}" : video.FileId;
+        string formatSelector = VideoQualitySelector.GetYouTubeFormat(video.PreferredQuality);
 
         string[] arguments =
         [
             "-m", "yt_dlp", video.VideoId,
             "--js-runtimes", $"node:{nodePath}",
             "--cookies-from-browser", "firefox",
-            "-f", "bestvideo+bestaudio",
+            "-f", formatSelector,
             "--check-formats",
             "--merge-output-format", "mkv",
             "--remux-video", "mkv",
@@ -74,7 +75,7 @@ internal static class YouTubeDownloader
         try
         {
             // First, extract metadata
-            await ExtractMetadata(video, nodePath);
+            await ExtractMetadata(video, nodePath, formatSelector);
 
             // Check cancellation before starting download
             cancellationToken.ThrowIfCancellationRequested();
@@ -187,7 +188,7 @@ internal static class YouTubeDownloader
         catch (Exception) { return false; }
     }
 
-    private static async Task ExtractMetadata(Video video, string nodePath)
+    private static async Task ExtractMetadata(Video video, string nodePath, string formatSelector)
     {
         try
         {
@@ -205,6 +206,7 @@ internal static class YouTubeDownloader
                 "-m", "yt_dlp", video.VideoId,
                 "--js-runtimes", $"node:{nodePath}",
                 "--cookies-from-browser", "firefox",
+                "-f", formatSelector,
                 "--dump-json",
                 "--no-playlist"
             ];
@@ -229,7 +231,11 @@ internal static class YouTubeDownloader
                     video.Title = titleElement.GetString();
                 }
 
-                if (root.TryGetProperty("format", out var formatElement))
+                if (root.TryGetProperty("height", out var heightElement) && heightElement.TryGetInt32(out int height))
+                {
+                    video.Quality = $"{height}p";
+                }
+                else if (root.TryGetProperty("format", out var formatElement))
                 {
                     video.Quality = formatElement.GetString();
                 }

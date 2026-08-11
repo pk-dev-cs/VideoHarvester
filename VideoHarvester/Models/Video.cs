@@ -18,6 +18,7 @@ public class Video : INotifyPropertyChanged
     public int Order { get; set; }
     public string FileId { get; set; } = Guid.NewGuid().ToString("N")[..8];
     public bool UseOrderNumeration { get; set; }
+    public string PreferredQuality { get; set; } = "Best";
     public string DownloadDirectory { get; set; } = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.MyVideos),
         "VideoHarvester");
