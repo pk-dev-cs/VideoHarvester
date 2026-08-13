@@ -92,6 +92,7 @@ public class Video : INotifyPropertyChanged
             {
                 VideoSource.YouTube => "mkv",
                 VideoSource.YouTubeWav => "wav",
+                VideoSource.Cda => "mp4",
                 _ => "mp4"
             };
             return Path.Combine(DownloadDirectory, $"{fileName}.{extension}");

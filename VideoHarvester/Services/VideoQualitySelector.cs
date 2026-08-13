@@ -25,4 +25,12 @@ internal static class VideoQualitySelector
             ? "bestvideo+bestaudio"
             : $"bestvideo[height<={maximumHeight}]+bestaudio/worstvideo+bestaudio/worst";
     }
+
+    public static string GetCdaFormat(string? preferredQuality)
+    {
+        int? maximumHeight = GetMaximumHeight(preferredQuality);
+        return maximumHeight is null
+            ? "best"
+            : $"best[height<={maximumHeight}]";
+    }
 }
