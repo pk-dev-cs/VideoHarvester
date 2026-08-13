@@ -108,11 +108,23 @@ public partial class MainWindowViewModel : ObservableObject
     [RelayCommand]
     public void AddToQueue()
     {
-        string? videoReference = SelectedSource == VideoSource.Wistia ? ExtractWistiaVideoId(VideoId) : NormalizeYouTubeUrl(VideoId);
+        string? videoReference = SelectedSource switch
+        {
+            VideoSource.Wistia => ExtractWistiaVideoId(VideoId),
+            VideoSource.Cda => ExtractCdaVideoId(VideoId),
+            _ => NormalizeYouTubeUrl(VideoId)
+        };
 
         if (string.IsNullOrWhiteSpace(videoReference))
         {
-            System.Windows.MessageBox.Show(SelectedSource == VideoSource.Wistia ? "Please enter a page address containing a Wistia video." : "Please enter a valid YouTube video URL.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            string errorMessage = SelectedSource switch
+            {
+                VideoSource.Wistia => "Please enter a page address containing a Wistia video.",
+                VideoSource.Cda => "Please enter a valid Cda.pl video URL (e.g., https://www.cda.pl/video/3383563ba).",
+                _ => "Please enter a valid YouTube video URL."
+            };
+
+            System.Windows.MessageBox.Show(errorMessage, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             return;
         }
 
@@ -140,6 +152,36 @@ public partial class MainWindowViewModel : ObservableObject
         string host = uri.Host.ToLowerInvariant();
         bool valid = host == "youtu.be" || host == "youtube.com" || host.EndsWith(".youtube.com", StringComparison.Ordinal) || host == "youtube-nocookie.com" || host.EndsWith(".youtube-nocookie.com", StringComparison.Ordinal);
         return valid ? uri.AbsoluteUri : null;
+    }
+
+    private static string? ExtractCdaVideoId(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return null;
+
+        // Try to parse as URL first
+        if (Uri.TryCreate(value.Trim(), UriKind.Absolute, out Uri? uri))
+        {
+            string host = uri.Host.ToLowerInvariant();
+            if (host == "cda.pl" || host.EndsWith(".cda.pl", StringComparison.Ordinal))
+            {
+                // Extract video ID from path like /video/3383563ba
+                var match = System.Text.RegularExpressions.Regex.Match(uri.AbsolutePath, @"/video/([a-zA-Z0-9]+)");
+                if (match.Success)
+                {
+                    return match.Groups[1].Value;
+                }
+            }
+        }
+
+        // If not a URL, maybe it's just the video ID
+        var idMatch = System.Text.RegularExpressions.Regex.Match(value.Trim(), @"^([a-zA-Z0-9]+)$");
+        if (idMatch.Success)
+        {
+            return idMatch.Groups[1].Value;
+        }
+
+        return null;
     }
 
     private static string ResolveDownloadDirectory(string? configuredPath)
