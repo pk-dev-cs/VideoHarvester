@@ -38,6 +38,7 @@ public class DownloadVideoService : IDownloadVideoService
             {
                 VideoSource.YouTube => "mkv",
                 VideoSource.YouTubeWav => "wav",
+                VideoSource.Cda => "mp4",
                 _ => "mp4"
             }
         };
@@ -58,6 +59,7 @@ public class DownloadVideoService : IDownloadVideoService
                 VideoSource.YouTube => YouTubeDownloader.Download(video, cancellationToken),
                 VideoSource.YouTubeWav => YouTubeWavDownloader.Download(video, cancellationToken),
                 VideoSource.Wistia => WistiaDownloader.Download(video, cancellationToken),
+                VideoSource.Cda => CdaDownloader.Download(video, cancellationToken),
                 _ => throw new ArgumentOutOfRangeException(nameof(video.Source), video.Source, "Unsupported video source.")
             });
 
