@@ -1,5 +1,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
+using VideoHarvester.Messages;
 using VideoHarvester.Models;
 using VideoHarvester.Services;
 using Forms = System.Windows.Forms;
@@ -21,6 +23,15 @@ public partial class SettingsViewModel : ObservableObject
 
     [ObservableProperty]
     private int _maxConcurrentDownloads;
+
+    partial void OnMaxConcurrentDownloadsChanged(int value)
+    {
+        // Clamp value between 1 and 5
+        if (value < 1)
+            MaxConcurrentDownloads = 1;
+        else if (value > 5)
+            MaxConcurrentDownloads = 5;
+    }
 
     [ObservableProperty]
     private string _preferredVideoQuality = "Best";
@@ -61,6 +72,13 @@ public partial class SettingsViewModel : ObservableObject
         };
 
         await _settingsService.SaveSettingsAsync(settings);
+
+        // Notify about settings update
+        WeakReferenceMessenger.Default.Send(new SettingsUpdatedMessage
+        {
+            MaxConcurrentDownloads = MaxConcurrentDownloads
+        });
+
         await Task.Delay(500); // Visual feedback
 
         IsSaving = false;
