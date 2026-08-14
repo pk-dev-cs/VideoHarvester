@@ -28,3 +28,10 @@
 - Run `dotnet build VideoHarvester.sln` before merging into `main`.
 - The build must complete with no errors. Address warnings introduced by the change before publishing.
 - Run `git diff --check` to catch whitespace errors before committing or merging.
+
+## Git Safety Rules
+
+- **NEVER use `git reset --hard`** - it permanently deletes uncommitted changes from the workspace.
+- Use `git reset --soft` if you need to uncommit while keeping changes staged.
+- Use `git reset --mixed` (default) to uncommit and unstage while keeping changes in workspace.
+- Interactive rebase (`git rebase -i`) cannot be executed through API - ask user to do it manually if needed.
