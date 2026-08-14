@@ -22,6 +22,10 @@ public partial class MainWindowViewModel : ObservableObject
     private readonly ISettingsService _settingsService;
     private bool _isDownloading = false;
     private readonly Dictionary<Video, CancellationTokenSource> _downloadCancellations = new();
+    private readonly SemaphoreSlim _downloadSemaphore;
+    private int _currentMaxConcurrent = 1;
+    private readonly Task _semaphoreInitialization;
+    private TaskCompletionSource<bool> _queueChangedSignal = new();
 
     [ObservableProperty]
     private string? videoId = "";
@@ -54,7 +58,47 @@ public partial class MainWindowViewModel : ObservableObject
         _historyService = historyService;
         _settingsService = settingsService;
         Settings = settingsViewModel;
+        _downloadSemaphore = new SemaphoreSlim(1, 5);
         _ = InitializeDependencies();
+        _semaphoreInitialization = InitializeSemaphore();
+
+        // Subscribe to settings updates
+        WeakReferenceMessenger.Default.Register<SettingsUpdatedMessage>(this, (r, m) =>
+        {
+            UpdateSemaphoreLimit(m.MaxConcurrentDownloads);
+        });
+    }
+
+    private async Task InitializeSemaphore()
+    {
+        var settings = await _settingsService.LoadSettingsAsync();
+        var maxConcurrent = Math.Clamp(settings.MaxConcurrentDownloads, 1, 5);
+        _currentMaxConcurrent = maxConcurrent;
+        _downloadSemaphore.Release(maxConcurrent - 1);
+    }
+
+    private void UpdateSemaphoreLimit(int newMaxConcurrent)
+    {
+        newMaxConcurrent = Math.Clamp(newMaxConcurrent, 1, 5);
+        int difference = newMaxConcurrent - _currentMaxConcurrent;
+
+        System.Diagnostics.Debug.WriteLine($"UpdateSemaphoreLimit: current={_currentMaxConcurrent}, new={newMaxConcurrent}, diff={difference}");
+
+        if (difference > 0)
+        {
+            _downloadSemaphore.Release(difference);
+            System.Diagnostics.Debug.WriteLine($"Released {difference} slots");
+        }
+        else if (difference < 0)
+        {
+            for (int i = 0; i < Math.Abs(difference); i++)
+            {
+                _downloadSemaphore.WaitAsync(0).ConfigureAwait(false);
+            }
+            System.Diagnostics.Debug.WriteLine($"Acquired {Math.Abs(difference)} slots");
+        }
+
+        _currentMaxConcurrent = newMaxConcurrent;
     }
 
     private async Task InitializeDependencies()
@@ -144,6 +188,13 @@ public partial class MainWindowViewModel : ObservableObject
 
         if (!_isDownloading)
             ProcessQueue();
+        else
+        {
+            // Signal the running ProcessQueue that a new item was added
+            var signal = _queueChangedSignal;
+            _queueChangedSignal = new TaskCompletionSource<bool>();
+            signal.TrySetResult(true);
+        }
     }
 
     private static string? NormalizeYouTubeUrl(string? value)
@@ -220,27 +271,114 @@ public partial class MainWindowViewModel : ObservableObject
 
         _isDownloading = true;
 
-        while (DownloadQueue.Any(v => v.Status == "Queued"))
-        {
-            var video = DownloadQueue.First(v => v.Status == "Queued");
-            var cts = new CancellationTokenSource();
-            _downloadCancellations[video] = cts;
+        // Wait for semaphore initialization to complete
+        await _semaphoreInitialization;
+        System.Diagnostics.Debug.WriteLine($"Semaphore initialized with {_currentMaxConcurrent} slots");
 
-            try
+        var downloadTasks = new List<Task>();
+
+        try
+        {
+            while (true)
             {
-                await _downloadVideoService.DownloadVideo(video, cts.Token);
-            }
-            catch (OperationCanceledException)
-            {
-                video.Status = "Cancelled";
-            }
-            finally
-            {
-                _downloadCancellations.Remove(video);
+                // Clean up completed tasks
+                downloadTasks.RemoveAll(t => t.IsCompleted);
+                System.Diagnostics.Debug.WriteLine($"Active tasks: {downloadTasks.Count}, Queued videos: {DownloadQueue.Count(v => v.Status == "Queued")}");
+
+                // Check if we can start new downloads
+                var queuedVideos = DownloadQueue.Where(v => v.Status == "Queued").ToList();
+
+                foreach (var video in queuedVideos)
+                {
+                    // Try to acquire semaphore without blocking
+                    bool acquired = await _downloadSemaphore.WaitAsync(0);
+                    System.Diagnostics.Debug.WriteLine($"Trying to start {video.VideoId}: {(acquired ? "SUCCESS" : "FAILED - no slots")}");
+
+                    if (!acquired)
+                        break; // No available slots right now
+
+                    var cts = new CancellationTokenSource();
+                    _downloadCancellations[video] = cts;
+
+                    // Capture video reference for the task
+                    var currentVideo = video;
+                    var currentCts = cts;
+
+                    var downloadTask = DownloadVideoAsync(currentVideo, currentCts);
+                    downloadTasks.Add(downloadTask);
+                }
+
+                // If no tasks running and no queued items, we're done
+                if (!downloadTasks.Any() && !DownloadQueue.Any(v => v.Status == "Queued"))
+                    break;
+
+                // If we have running tasks, wait for at least one to complete OR for a new item signal
+                if (downloadTasks.Any())
+                {
+                    var tasksWithSignal = new List<Task>(downloadTasks) { _queueChangedSignal.Task };
+                    var completedTask = await Task.WhenAny(tasksWithSignal);
+
+                    // If it's the signal, loop will restart and check for new items
+                    if (completedTask == _queueChangedSignal.Task)
+                    {
+                        System.Diagnostics.Debug.WriteLine("New item added to queue - checking for available slots");
+                        continue;
+                    }
+
+                    // Ensure any exceptions are observed
+                    try
+                    {
+                        await completedTask;
+                    }
+                    catch
+                    {
+                        // Exception already handled in DownloadVideoAsync
+                    }
+                }
+                else
+                {
+                    // No running tasks but there are queued items
+                    // This shouldn't happen, but add a small delay to prevent tight loop
+                    await Task.Delay(100);
+                }
             }
         }
+        finally
+        {
+            // Wait for all remaining downloads to complete
+            if (downloadTasks.Any())
+            {
+                await Task.WhenAll(downloadTasks);
+            }
 
-        _isDownloading = false;
+            _isDownloading = false;
+        }
+    }
+
+    private async Task DownloadVideoAsync(Video video, CancellationTokenSource cts)
+    {
+        try
+        {
+            await _downloadVideoService.DownloadVideo(video, cts.Token);
+        }
+        catch (OperationCanceledException)
+        {
+            video.Status = "Cancelled";
+        }
+        catch (Exception ex)
+        {
+            // Ensure any unexpected exceptions don't crash the queue processing
+            video.Status = "Failed";
+            if (string.IsNullOrEmpty(video.ErrorMessage))
+            {
+                video.ErrorMessage = $"Unexpected error: {ex.Message}";
+            }
+        }
+        finally
+        {
+            _downloadCancellations.Remove(video);
+            _downloadSemaphore.Release();
+        }
     }
 
     [RelayCommand]
