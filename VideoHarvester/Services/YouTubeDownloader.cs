@@ -34,7 +34,6 @@ internal static class YouTubeDownloader
         var startInfo = new ProcessStartInfo
         {
             FileName = "python",
-            WorkingDirectory = outputFolder,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             UseShellExecute = false,
@@ -42,6 +41,7 @@ internal static class YouTubeDownloader
         };
 
         string outputFileName = video.UseOrderNumeration ? $"{video.Order}_{video.FileId}" : video.FileId;
+        string fullOutputPath = Path.Combine(outputFolder, $"{outputFileName}.%(ext)s");
         string formatSelector = VideoQualitySelector.GetYouTubeFormat(video.PreferredQuality);
 
         string[] arguments =
@@ -54,8 +54,9 @@ internal static class YouTubeDownloader
             "--merge-output-format", "mkv",
             "--remux-video", "mkv",
             "--no-playlist",
-            "-o", $"{outputFileName}.%(ext)s",
-            "--windows-filenames", "--progress", "--newline"
+            "-o", fullOutputPath,
+            "--windows-filenames", "--progress", "--newline",
+            "--no-overwrites"
         ];
 
         foreach (string argument in arguments)
