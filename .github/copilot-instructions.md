@@ -29,6 +29,12 @@
 - The build must complete with no errors. Address warnings introduced by the change before publishing.
 - Run `git diff --check` to catch whitespace errors before committing or merging.
 
+## Code Style
+
+- **Avoid unnecessary comments** - code should be self-explanatory through clear naming and structure.
+- Use comments only when absolutely necessary to explain complex logic or non-obvious decisions.
+- Remove commented-out code instead of leaving it in the codebase.
+
 ## Git Safety Rules
 
 - **NEVER use `git reset --hard`** - it permanently deletes uncommitted changes from the workspace.
