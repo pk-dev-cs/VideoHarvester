@@ -16,7 +16,7 @@ public partial class SettingsViewModel : ObservableObject
     private string _defaultDownloadPath = string.Empty;
 
     [ObservableProperty]
-    private bool _autoStartDownload;
+    private bool _autoStartDownload = true;
 
     [ObservableProperty]
     private bool _showNotifications;

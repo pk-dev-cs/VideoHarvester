@@ -22,6 +22,7 @@ public partial class MainWindowViewModel : ObservableObject
     private readonly ISettingsService _settingsService;
     private bool _isDownloading = false;
     private readonly Dictionary<Video, CancellationTokenSource> _downloadCancellations = new();
+    private readonly HashSet<Video> _pauseRequests = [];
     private readonly SemaphoreSlim _downloadSemaphore;
     private int _currentMaxConcurrent = 1;
     private readonly Task _semaphoreInitialization;
@@ -182,19 +183,16 @@ public partial class MainWindowViewModel : ObservableObject
             PreferredQuality = Settings.PreferredVideoQuality,
             DownloadDirectory = ResolveDownloadDirectory(Settings.DefaultDownloadPath)
         };
+
+        if (!Settings.AutoStartDownload)
+            video.Status = "Ready";
+
         DownloadQueue.Add(video);
 
         WeakReferenceMessenger.Default.Send(new FolderOpenedMessage());
 
-        if (!_isDownloading)
-            ProcessQueue();
-        else
-        {
-            // Signal the running ProcessQueue that a new item was added
-            var signal = _queueChangedSignal;
-            _queueChangedSignal = new TaskCompletionSource<bool>();
-            signal.TrySetResult(true);
-        }
+        if (Settings.AutoStartDownload)
+            StartQueueProcessing();
     }
 
     private static string? NormalizeYouTubeUrl(string? value)
@@ -253,17 +251,69 @@ public partial class MainWindowViewModel : ObservableObject
     [RelayCommand]
     public void RemoveFromQueue(Video video)
     {
-        // If video is currently downloading, cancel it
+        _pauseRequests.Remove(video);
+
         if (_downloadCancellations.TryGetValue(video, out var cts))
-        {
             cts.Cancel();
-            _downloadCancellations.Remove(video);
-            video.Status = "Cancelled";
-        }
 
         DownloadQueue.Remove(video);
     }
 
+    [RelayCommand]
+    public void StartDownload(Video video)
+    {
+        if (video.Status == "Downloaded" || _downloadCancellations.ContainsKey(video))
+            return;
+
+        _pauseRequests.Remove(video);
+        video.ErrorMessage = null;
+        video.Status = "Queued";
+        StartQueueProcessing();
+    }
+
+    [RelayCommand]
+    public void PauseDownload(Video video)
+    {
+        if (_downloadCancellations.TryGetValue(video, out var cts))
+        {
+            _pauseRequests.Add(video);
+            video.Status = "Pausing";
+            cts.Cancel();
+            return;
+        }
+
+        if (video.Status == "Queued")
+            video.Status = "Paused";
+    }
+
+    [RelayCommand]
+    public void StopDownload(Video video)
+    {
+        _pauseRequests.Remove(video);
+
+        if (_downloadCancellations.TryGetValue(video, out var cts))
+        {
+            video.Status = "Stopping";
+            cts.Cancel();
+            return;
+        }
+
+        if (video.Status != "Downloaded")
+            video.Status = "Cancelled";
+    }
+
+    private void StartQueueProcessing()
+    {
+        if (!_isDownloading)
+        {
+            ProcessQueue();
+            return;
+        }
+
+        var signal = _queueChangedSignal;
+        _queueChangedSignal = new TaskCompletionSource<bool>();
+        signal.TrySetResult(true);
+    }
     private async void ProcessQueue()
     {
         if (_isDownloading)
@@ -299,6 +349,7 @@ public partial class MainWindowViewModel : ObservableObject
 
                     var cts = new CancellationTokenSource();
                     _downloadCancellations[video] = cts;
+                    video.Status = "Starting";
 
                     // Capture video reference for the task
                     var currentVideo = video;
@@ -363,7 +414,7 @@ public partial class MainWindowViewModel : ObservableObject
         }
         catch (OperationCanceledException)
         {
-            video.Status = "Cancelled";
+            video.Status = _pauseRequests.Remove(video) ? "Paused" : "Cancelled";
         }
         catch (Exception ex)
         {
@@ -376,6 +427,7 @@ public partial class MainWindowViewModel : ObservableObject
         }
         finally
         {
+            _pauseRequests.Remove(video);
             _downloadCancellations.Remove(video);
             _downloadSemaphore.Release();
         }
