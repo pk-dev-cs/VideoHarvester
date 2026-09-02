@@ -23,9 +23,8 @@ public partial class MainWindowViewModel : ObservableObject
     private bool _isDownloading = false;
     private readonly Dictionary<Video, CancellationTokenSource> _downloadCancellations = new();
     private readonly HashSet<Video> _pauseRequests = [];
-    private readonly SemaphoreSlim _downloadSemaphore;
     private int _currentMaxConcurrent = 1;
-    private readonly Task _semaphoreInitialization;
+    private readonly Task _queueInitialization;
     private TaskCompletionSource<bool> _queueChangedSignal = new();
 
     [ObservableProperty]
@@ -59,47 +58,26 @@ public partial class MainWindowViewModel : ObservableObject
         _historyService = historyService;
         _settingsService = settingsService;
         Settings = settingsViewModel;
-        _downloadSemaphore = new SemaphoreSlim(1, 5);
         _ = InitializeDependencies();
-        _semaphoreInitialization = InitializeSemaphore();
+        _queueInitialization = InitializeQueue();
 
         // Subscribe to settings updates
         WeakReferenceMessenger.Default.Register<SettingsUpdatedMessage>(this, (r, m) =>
         {
-            UpdateSemaphoreLimit(m.MaxConcurrentDownloads);
+            UpdateConcurrentDownloadLimit(m.MaxConcurrentDownloads);
         });
     }
 
-    private async Task InitializeSemaphore()
+    private async Task InitializeQueue()
     {
         var settings = await _settingsService.LoadSettingsAsync();
-        var maxConcurrent = Math.Clamp(settings.MaxConcurrentDownloads, 1, 5);
-        _currentMaxConcurrent = maxConcurrent;
-        _downloadSemaphore.Release(maxConcurrent - 1);
+        _currentMaxConcurrent = Math.Clamp(settings.MaxConcurrentDownloads, 1, 5);
     }
 
-    private void UpdateSemaphoreLimit(int newMaxConcurrent)
+    private void UpdateConcurrentDownloadLimit(int newMaxConcurrent)
     {
-        newMaxConcurrent = Math.Clamp(newMaxConcurrent, 1, 5);
-        int difference = newMaxConcurrent - _currentMaxConcurrent;
-
-        System.Diagnostics.Debug.WriteLine($"UpdateSemaphoreLimit: current={_currentMaxConcurrent}, new={newMaxConcurrent}, diff={difference}");
-
-        if (difference > 0)
-        {
-            _downloadSemaphore.Release(difference);
-            System.Diagnostics.Debug.WriteLine($"Released {difference} slots");
-        }
-        else if (difference < 0)
-        {
-            for (int i = 0; i < Math.Abs(difference); i++)
-            {
-                _downloadSemaphore.WaitAsync(0).ConfigureAwait(false);
-            }
-            System.Diagnostics.Debug.WriteLine($"Acquired {Math.Abs(difference)} slots");
-        }
-
-        _currentMaxConcurrent = newMaxConcurrent;
+        _currentMaxConcurrent = Math.Clamp(newMaxConcurrent, 1, 5);
+        StartQueueProcessing();
     }
 
     private async Task InitializeDependencies()
@@ -321,9 +299,7 @@ public partial class MainWindowViewModel : ObservableObject
 
         _isDownloading = true;
 
-        // Wait for semaphore initialization to complete
-        await _semaphoreInitialization;
-        System.Diagnostics.Debug.WriteLine($"Semaphore initialized with {_currentMaxConcurrent} slots");
+        await _queueInitialization;
 
         var downloadTasks = new List<Task>();
 
@@ -335,18 +311,14 @@ public partial class MainWindowViewModel : ObservableObject
                 downloadTasks.RemoveAll(t => t.IsCompleted);
                 System.Diagnostics.Debug.WriteLine($"Active tasks: {downloadTasks.Count}, Queued videos: {DownloadQueue.Count(v => v.Status == "Queued")}");
 
-                // Check if we can start new downloads
-                var queuedVideos = DownloadQueue.Where(v => v.Status == "Queued").ToList();
+                int availableSlots = Math.Max(0, _currentMaxConcurrent - downloadTasks.Count);
+                var queuedVideos = DownloadQueue
+                    .Where(v => v.Status == "Queued")
+                    .Take(availableSlots)
+                    .ToList();
 
                 foreach (var video in queuedVideos)
                 {
-                    // Try to acquire semaphore without blocking
-                    bool acquired = await _downloadSemaphore.WaitAsync(0);
-                    System.Diagnostics.Debug.WriteLine($"Trying to start {video.VideoId}: {(acquired ? "SUCCESS" : "FAILED - no slots")}");
-
-                    if (!acquired)
-                        break; // No available slots right now
-
                     var cts = new CancellationTokenSource();
                     _downloadCancellations[video] = cts;
                     video.Status = "Starting";
@@ -429,7 +401,6 @@ public partial class MainWindowViewModel : ObservableObject
         {
             _pauseRequests.Remove(video);
             _downloadCancellations.Remove(video);
-            _downloadSemaphore.Release();
         }
     }
 
