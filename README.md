@@ -60,6 +60,8 @@ dotnet run --project VideoHarvester
 4. **Start Download**: Click "Download All" to begin downloading queued videos
 5. **View History**: Switch to the History tab to see previously downloaded videos
 
+For YouTube downloads, the app reads cookies from the default browser when it supports cookie extraction. Public videos can also be downloaded without browser cookies.
+
 ### Video ID Examples
 
 - **Wistia**: `abc123xyz` (from URL: `https://example.wistia.com/medias/abc123xyz`)
@@ -105,7 +107,6 @@ This tool is for personal use only. Please respect copyright laws and terms of s
 
 ## 🐛 Known Issues
 
-- YouTube downloads require Firefox browser for cookie extraction
 - Some videos may require specific quality format adjustments
 
 ## 📝 Changelog
