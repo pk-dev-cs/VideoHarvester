@@ -422,6 +422,27 @@ public partial class MainWindowViewModel : ObservableObject
     }
 
     [RelayCommand]
+    public async Task RemoveFromHistory(DownloadHistory item)
+    {
+        await _historyService.DeleteDownloadAsync(item.Id);
+        DownloadHistory.Remove(item);
+    }
+
+    [RelayCommand]
+    public async Task ClearHistory()
+    {
+        if (DownloadHistory.Count == 0)
+            return;
+
+        var result = System.Windows.MessageBox.Show("Clear all download history?", "Clear history", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+        if (result != MessageBoxResult.Yes)
+            return;
+
+        await _historyService.ClearDownloadsAsync();
+        DownloadHistory.Clear();
+    }
+
+    [RelayCommand]
     public static void CopyErrorToClipboard(string errorMessage)
     {
         if (!string.IsNullOrEmpty(errorMessage))
