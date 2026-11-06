@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.Messaging;
 using HtmlAgilityPack;
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Reflection;
 using System.Web;
 using System.Windows;
 using VideoHarvester.Messages;
@@ -51,6 +52,8 @@ public partial class MainWindowViewModel : ObservableObject
     public ObservableCollection<DependencyStatus> Dependencies { get; } = [];
 
     public SettingsViewModel Settings { get; }
+
+    public string AppVersion { get; } = $"v{typeof(MainWindowViewModel).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion.Split('+')[0] ?? "unknown"}";
 
     public MainWindowViewModel(IDownloadVideoService downloadVideoService, IDownloadHistoryService historyService, ISettingsService settingsService, SettingsViewModel settingsViewModel)
     {

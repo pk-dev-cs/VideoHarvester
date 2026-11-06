@@ -982,29 +982,37 @@
 
         <!-- Footer with Dependency Status -->
         <Border Grid.Row="2" Background="#151922" BorderBrush="#252B38" BorderThickness="0,1,0,0" Padding="28,12">
-            <ItemsControl ItemsSource="{Binding Dependencies}">
-                <ItemsControl.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" />
-                    </ItemsPanelTemplate>
-                </ItemsControl.ItemsPanel>
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate>
-                        <StackPanel Orientation="Horizontal" Margin="16,0">
-                            <TextBlock Text="{Binding Icon}" 
-                                       FontFamily="Segoe MDL2 Assets" 
-                                       FontSize="16"
-                                       Foreground="{Binding IsAvailable, Converter={StaticResource DependencyStatusColorConverter}}"
-                                       VerticalAlignment="Center" />
-                            <TextBlock Text="{Binding Name}" 
-                                       FontSize="12" 
-                                       Margin="6,0,0,0"
-                                       Foreground="{Binding IsAvailable, Converter={StaticResource DependencyStatusColorConverter}}"
-                                       VerticalAlignment="Center" />
-                        </StackPanel>
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="{Binding AppVersion}" FontSize="12" Foreground="#7E899A"
+                           VerticalAlignment="Center" ToolTip="Application version" />
+                <ItemsControl Grid.Column="1" ItemsSource="{Binding Dependencies}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal" Margin="16,0">
+                                <TextBlock Text="{Binding Icon}"
+                                           FontFamily="Segoe MDL2 Assets"
+                                           FontSize="16"
+                                           Foreground="{Binding IsAvailable, Converter={StaticResource DependencyStatusColorConverter}}"
+                                           VerticalAlignment="Center" />
+                                <TextBlock Text="{Binding Name}"
+                                           FontSize="12"
+                                           Margin="6,0,0,0"
+                                           Foreground="{Binding IsAvailable, Converter={StaticResource DependencyStatusColorConverter}}"
+                                           VerticalAlignment="Center" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </Grid>
         </Border>
 
         <!-- Sliding Menu Panel -->
