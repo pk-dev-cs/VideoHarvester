@@ -14,6 +14,7 @@ internal static class UpdateLayoutChecks
         var app = new Application();
         try
         {
+            LocalizationChecks.RunBindings();
             foreach (bool downloaded in new[] { false, true })
             {
                 var model = new AppUpdatesViewModel(new UnusedUpdates(), () => false)

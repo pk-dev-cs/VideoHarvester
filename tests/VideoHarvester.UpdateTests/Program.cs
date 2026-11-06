@@ -22,6 +22,7 @@ internal static class Program
 
     private static async Task RunAsync(string[] args)
     {
+        await LocalizationChecks.RunAsync();
         var unavailable = new FakeUpdates { IsInstalled = false };
         var unavailableView = new AppUpdatesViewModel(unavailable, () => true);
         await unavailableView.CheckOnStartupAsync();
