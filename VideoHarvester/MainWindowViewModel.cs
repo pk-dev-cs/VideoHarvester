@@ -55,6 +55,8 @@ public partial class MainWindowViewModel : ObservableObject
 
     public string AppVersion { get; } = $"v{typeof(MainWindowViewModel).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion.Split('+')[0] ?? "unknown"}";
 
+    public bool CanRestartForUpdate => !_isDownloading && _downloadCancellations.Count == 0 && DownloadQueue.All(video => video.Status == "Downloaded");
+
     public MainWindowViewModel(IDownloadVideoService downloadVideoService, IDownloadHistoryService historyService, ISettingsService settingsService, SettingsViewModel settingsViewModel)
     {
         _downloadVideoService = downloadVideoService;

@@ -30,6 +30,7 @@ public partial class AppUpdatesViewModel(IAppUpdateService service, Func<bool> c
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ShowDownloadButton))]
+    [NotifyPropertyChangedFor(nameof(HasUpdate))]
     [NotifyCanExecuteChangedFor(nameof(DownloadUpdateCommand))]
     private string? availableVersion;
 
@@ -40,6 +41,7 @@ public partial class AppUpdatesViewModel(IAppUpdateService service, Func<bool> c
     private bool isDownloaded;
 
     public bool ShowDownloadButton => AvailableVersion is not null && !IsDownloaded;
+    public bool HasUpdate => AvailableVersion is not null;
     private bool CanCheck => !IsBusy;
     private bool CanDownload => !IsBusy && ShowDownloadButton;
     private bool CanInstall => !IsBusy && IsDownloaded;
@@ -161,6 +163,9 @@ public partial class AppUpdatesViewModel(IAppUpdateService service, Func<bool> c
 
     [RelayCommand(CanExecute = nameof(CanCheck))]
     private void Later() => IsPanelVisible = false;
+
+    [RelayCommand]
+    private void ShowUpdate() => IsPanelVisible = true;
 
     [RelayCommand]
     private void OpenReleases() => Process.Start(new ProcessStartInfo(AppUpdateService.ReleasesUrl) { UseShellExecute = true });

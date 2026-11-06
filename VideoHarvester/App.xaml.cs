@@ -14,10 +14,11 @@ namespace VideoHarvester
     {
         public IServiceProvider Services { get; }
 
-        public App()
+        public App() : this(ConfigureServices())
         {
-            Services = ConfigureServices();
         }
+
+        internal App(IServiceProvider services) => Services = services;
 
         public new static App Current => (App)WpfApplication.Current;
 
