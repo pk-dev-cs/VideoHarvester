@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection;
 using System.Configuration;
 using System.Data;
 using System.Windows;
@@ -39,7 +39,17 @@ namespace VideoHarvester
         {
             // Initialize database
             var historyService = Services.GetRequiredService<IDownloadHistoryService>();
-            await historyService.InitializeDatabaseAsync();
+            try
+            {
+                await historyService.InitializeDatabaseAsync();
+            }
+            catch (Exception ex)
+            {
+                System.Windows.MessageBox.Show($"Could not prepare download history. Your existing database has been preserved.\n\n{ex.Message}",
+                    "Startup error", MessageBoxButton.OK, MessageBoxImage.Error);
+                Shutdown(1);
+                return;
+            }
 
             // Create and show main window first (but don't show it yet)
             var mainWindow = new MainWindow();
