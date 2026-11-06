@@ -13,6 +13,7 @@ public interface IDownloadHistoryService
     Task<List<DownloadHistory>> GetAllDownloadsAsync();
     Task<List<DownloadHistory>> GetDownloadsByStatusAsync(string status);
     Task DeleteDownloadAsync(int id);
+    Task ClearDownloadsAsync();
 }
 
 public class DownloadHistoryService : IDownloadHistoryService
@@ -212,6 +213,16 @@ public class DownloadHistoryService : IDownloadHistoryService
         command.CommandText = "DELETE FROM downloads WHERE id = $id";
         command.Parameters.AddWithValue("$id", id);
 
+        await command.ExecuteNonQueryAsync();
+    }
+
+    public async Task ClearDownloadsAsync()
+    {
+        using var connection = new SqliteConnection(_connectionString);
+        await connection.OpenAsync();
+
+        var command = connection.CreateCommand();
+        command.CommandText = "DELETE FROM downloads";
         await command.ExecuteNonQueryAsync();
     }
 
