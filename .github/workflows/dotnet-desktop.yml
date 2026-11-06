@@ -45,7 +45,12 @@ jobs:
 
     # Build the application
     - name: Build the application
-      run: dotnet build $env:Solution_Name --configuration ${{ matrix.configuration }} --no-restore
+      run: |
+        $versionArgs = @()
+        if ($env:GITHUB_REF_TYPE -eq 'tag') {
+          $versionArgs = @("-p:Version=$($env:GITHUB_REF_NAME -replace '^v', '')")
+        }
+        dotnet build $env:Solution_Name --configuration ${{ matrix.configuration }} --no-restore @versionArgs
 
     # Execute all unit tests in the solution (if any exist)
     - name: Execute unit tests
@@ -55,7 +60,12 @@ jobs:
     # Publish the application
     - name: Publish the application
       if: matrix.configuration == 'Release'
-      run: dotnet publish $env:Project_Path --configuration Release --output ./publish --no-build
+      run: |
+        $versionArgs = @()
+        if ($env:GITHUB_REF_TYPE -eq 'tag') {
+          $versionArgs = @("-p:Version=$($env:GITHUB_REF_NAME -replace '^v', '')")
+        }
+        dotnet publish $env:Project_Path --configuration Release --output ./publish --no-build @versionArgs
 
     # Upload build artifacts
     - name: Upload build artifacts
