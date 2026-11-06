@@ -18,6 +18,7 @@ internal static class WistiaDownloader
 
         try
         {
+            video.ErrorMessage = null;
             video.Status = "Downloading";
             string response = await client.GetStringAsync(apiUrl, cancellationToken);
             Match match = Regex.Match(response, "W\\.iframeInit\\((\\{.*?\\}), \\{");
@@ -59,32 +60,8 @@ internal static class WistiaDownloader
                 : selectedHeight > 0 ? $"{selectedHeight}p" : video.PreferredQuality;
 
             string videoUrl = urlElement.GetString()!.Replace(".bin", ".mp4");
-            using HttpResponseMessage videoResponse = await client.GetAsync(videoUrl, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
-            videoResponse.EnsureSuccessStatusCode();
-            await using Stream videoStream = await videoResponse.Content.ReadAsStreamAsync(cancellationToken);
-
-            byte[] buffer = new byte[8192];
-            long totalBytes = videoResponse.Content.Headers.ContentLength ?? -1;
-            long receivedBytes = 0;
-            int bytesRead;
-
-            // Write to file in a separate scope to ensure file is closed
-            {
-                await using FileStream fileStream = new(video.FilePath, FileMode.Create, FileAccess.Write, FileShare.None);
-
-                while ((bytesRead = await videoStream.ReadAsync(buffer, cancellationToken)) > 0)
-                {
-                    await fileStream.WriteAsync(buffer.AsMemory(0, bytesRead), cancellationToken);
-                    receivedBytes += bytesRead;
-                    if (totalBytes > 0)
-                        video.Progress = (int)(receivedBytes * 100 / totalBytes);
-                }
-
-                await fileStream.FlushAsync(cancellationToken);
-            }
-
-            // Small delay to ensure file handle is released by the OS
-            await Task.Delay(100, cancellationToken);
+            await ResumableFileDownloader.DownloadAsync(client, videoUrl, video.FilePath,
+                progress => video.Progress = progress, cancellationToken);
 
             video.Progress = 100;
             video.Status = "Downloaded";
@@ -97,9 +74,10 @@ internal static class WistiaDownloader
             video.Status = "Cancelled";
             throw;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
             video.Status = "Failed";
+            video.ErrorMessage = ex.Message;
         }
     }
 
