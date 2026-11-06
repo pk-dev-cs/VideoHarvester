@@ -1,13 +1,26 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System.Diagnostics;
+using System.ComponentModel;
+using VideoHarvester.Localization;
 using VideoHarvester.Services;
 
 namespace VideoHarvester;
 
-public partial class AppUpdatesViewModel(IAppUpdateService service, Func<bool> canRestart) : ObservableObject
+public partial class AppUpdatesViewModel : ObservableObject, IDisposable
 {
     private bool _startupChecked;
+    private readonly IAppUpdateService _service;
+    private readonly Func<bool> _canRestart;
+    private string? _statusKey;
+    private object?[] _statusArguments = [];
+
+    public AppUpdatesViewModel(IAppUpdateService service, Func<bool> canRestart)
+    {
+        _service = service;
+        _canRestart = canRestart;
+        LocalizationManager.Current.PropertyChanged += OnLanguageChanged;
+    }
 
     [ObservableProperty]
     private string status = string.Empty;
@@ -31,6 +44,7 @@ public partial class AppUpdatesViewModel(IAppUpdateService service, Func<bool> c
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ShowDownloadButton))]
     [NotifyPropertyChangedFor(nameof(HasUpdate))]
+    [NotifyPropertyChangedFor(nameof(DismissButtonText))]
     [NotifyCanExecuteChangedFor(nameof(DownloadUpdateCommand))]
     private string? availableVersion;
 
@@ -42,6 +56,7 @@ public partial class AppUpdatesViewModel(IAppUpdateService service, Func<bool> c
 
     public bool ShowDownloadButton => AvailableVersion is not null && !IsDownloaded;
     public bool HasUpdate => AvailableVersion is not null;
+    public string DismissButtonText => LocalizationManager.Current[HasUpdate ? "Common_Later" : "Common_Close"];
     private bool CanCheck => !IsBusy;
     private bool CanDownload => !IsBusy && ShowDownloadButton;
     private bool CanInstall => !IsBusy && IsDownloaded;
@@ -66,11 +81,11 @@ public partial class AppUpdatesViewModel(IAppUpdateService service, Func<bool> c
         IsBusy = true;
         try
         {
-            if (!service.IsInstalled)
+            if (!_service.IsInstalled)
             {
                 if (!silent)
                 {
-                    Status = "To enable automatic updates, use the installer or portable package from GitHub Releases.";
+                    SetStatus("Updates_RequiresPackage");
                     IsPanelVisible = true;
                 }
                 return;
@@ -78,33 +93,33 @@ public partial class AppUpdatesViewModel(IAppUpdateService service, Func<bool> c
 
             if (IsDownloaded)
             {
-                Status = $"Version {AvailableVersion} is ready to install.";
+                SetStatus("Updates_Ready", AvailableVersion);
                 IsPanelVisible = true;
                 return;
             }
 
             if (!silent)
             {
-                Status = "Checking for updates…";
+                SetStatus("Updates_Checking");
                 IsPanelVisible = true;
             }
 
-            AvailableVersion = await service.CheckAsync();
+            AvailableVersion = await _service.CheckAsync();
             if (AvailableVersion is not null)
             {
-                IsDownloaded = service.HasDownloadedUpdate;
-                Status = IsDownloaded ? $"Version {AvailableVersion} is ready to install." : $"Version {AvailableVersion} is available.";
+                IsDownloaded = _service.HasDownloadedUpdate;
+                SetStatus(IsDownloaded ? "Updates_Ready" : "Updates_Available", AvailableVersion);
                 IsPanelVisible = true;
             }
             else if (!silent)
-                Status = "You're up to date.";
+                SetStatus("Updates_Current");
         }
         catch (Exception ex)
         {
             Trace.WriteLine($"Update check failed: {ex}");
             if (!silent)
             {
-                Status = "Could not check for updates. Try again later or visit GitHub Releases.";
+                SetStatus("Updates_CheckFailed");
                 IsPanelVisible = true;
             }
         }
@@ -120,17 +135,17 @@ public partial class AppUpdatesViewModel(IAppUpdateService service, Func<bool> c
         IsBusy = true;
         IsDownloading = true;
         DownloadProgress = 0;
-        Status = $"Downloading version {AvailableVersion}…";
+        SetStatus("Updates_Downloading", AvailableVersion);
         try
         {
-            await service.DownloadAsync(new Progress<int>(progress => DownloadProgress = progress), CancellationToken.None);
+            await _service.DownloadAsync(new Progress<int>(progress => DownloadProgress = progress), CancellationToken.None);
             IsDownloaded = true;
-            Status = $"Version {AvailableVersion} is ready to install.";
+            SetStatus("Updates_Ready", AvailableVersion);
         }
         catch (Exception ex)
         {
             Trace.WriteLine($"Update download failed: {ex}");
-            Status = "Could not download the update. Your current version is unchanged. Try again later.";
+            SetStatus("Updates_DownloadFailed");
         }
         finally
         {
@@ -142,21 +157,21 @@ public partial class AppUpdatesViewModel(IAppUpdateService service, Func<bool> c
     [RelayCommand(CanExecute = nameof(CanInstall))]
     private void InstallUpdate()
     {
-        if (!canRestart())
+        if (!_canRestart())
         {
-            Status = "Finish or remove all unfinished queue items before updating. The update is ready when you are.";
+            SetStatus("Updates_UnfinishedQueue");
             return;
         }
 
         IsBusy = true;
         try
         {
-            service.ApplyAndRestart();
+            _service.ApplyAndRestart();
         }
         catch (Exception ex)
         {
             Trace.WriteLine($"Update installation failed: {ex}");
-            Status = "Could not install the update. You can keep using this version and try again later.";
+            SetStatus("Updates_InstallFailed");
             IsBusy = false;
         }
     }
@@ -169,4 +184,23 @@ public partial class AppUpdatesViewModel(IAppUpdateService service, Func<bool> c
 
     [RelayCommand]
     private void OpenReleases() => Process.Start(new ProcessStartInfo(AppUpdateService.ReleasesUrl) { UseShellExecute = true });
+
+    private void SetStatus(string key, params object?[] arguments)
+    {
+        _statusKey = key;
+        _statusArguments = arguments;
+        Status = LocalizationManager.Current.Format(key, arguments);
+    }
+
+    private void OnLanguageChanged(object? sender, PropertyChangedEventArgs args)
+    {
+        if (args.PropertyName != nameof(LocalizationManager.Culture))
+            return;
+
+        OnPropertyChanged(nameof(DismissButtonText));
+        if (_statusKey is not null)
+            Status = LocalizationManager.Current.Format(_statusKey, _statusArguments);
+    }
+
+    public void Dispose() => LocalizationManager.Current.PropertyChanged -= OnLanguageChanged;
 }

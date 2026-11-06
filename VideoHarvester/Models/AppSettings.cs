@@ -9,4 +9,5 @@ public class AppSettings
     public bool ShowNotifications { get; set; } = true;
     public int MaxConcurrentDownloads { get; set; } = 1;
     public string PreferredVideoQuality { get; set; } = "Best";
+    public string Language { get; set; } = "en";
 }

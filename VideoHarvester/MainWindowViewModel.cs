@@ -10,6 +10,7 @@ using System.Windows;
 using VideoHarvester.Messages;
 using VideoHarvester.Models;
 using VideoHarvester.Services;
+using VideoHarvester.Localization;
 using HtmlDocument = HtmlAgilityPack.HtmlDocument;
 
 namespace VideoHarvester;
@@ -147,12 +148,12 @@ public partial class MainWindowViewModel : ObservableObject
         {
             string errorMessage = SelectedSource switch
             {
-                VideoSource.Wistia => "Please enter a page address containing a Wistia video.",
-                VideoSource.Cda => "Please enter a valid Cda.pl video URL (e.g., https://www.cda.pl/video/3383563ba).",
-                _ => "Please enter a valid YouTube video URL."
+                VideoSource.Wistia => LocalizationManager.Current["Error_InvalidWistia"],
+                VideoSource.Cda => LocalizationManager.Current["Error_InvalidCda"],
+                _ => LocalizationManager.Current["Error_InvalidYouTube"]
             };
 
-            System.Windows.MessageBox.Show(errorMessage, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            System.Windows.MessageBox.Show(errorMessage, LocalizationManager.Current["Dialog_Error"], MessageBoxButton.OK, MessageBoxImage.Error);
             return;
         }
 
@@ -399,7 +400,7 @@ public partial class MainWindowViewModel : ObservableObject
             video.Status = "Failed";
             if (string.IsNullOrEmpty(video.ErrorMessage))
             {
-                video.ErrorMessage = $"Unexpected error: {ex.Message}";
+                video.ErrorMessage = LocalizationManager.Current.Format("Error_Unexpected", ex.Message);
             }
         }
         finally
@@ -439,7 +440,7 @@ public partial class MainWindowViewModel : ObservableObject
         if (DownloadHistory.Count == 0)
             return;
 
-        var result = System.Windows.MessageBox.Show("Clear all download history?", "Clear history", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+        var result = System.Windows.MessageBox.Show(LocalizationManager.Current["History_ClearQuestion"], LocalizationManager.Current["History_ClearTitle"], MessageBoxButton.YesNo, MessageBoxImage.Warning);
         if (result != MessageBoxResult.Yes)
             return;
 

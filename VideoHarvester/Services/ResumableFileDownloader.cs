@@ -1,3 +1,4 @@
+using VideoHarvester.Localization;
 using System.IO;
 using System.Net;
 using System.Net.Http;
@@ -20,11 +21,11 @@ internal static class ResumableFileDownloader
             if (offset > 0)
             {
                 if (!File.Exists(statePath))
-                    throw new IOException("Cannot safely resume: download information is missing. The partial file was preserved.");
+                    throw new IOException(LocalizationManager.Current["Resume_MissingInfo"]);
 
                 state = JsonSerializer.Deserialize<DownloadState>(await File.ReadAllTextAsync(statePath, cancellationToken));
                 if (state is null || state.Url != url || (state.Length.HasValue && offset > state.Length.Value))
-                    throw new IOException("Cannot safely resume: the source or partial file has changed. The partial file was preserved.");
+                    throw new IOException(LocalizationManager.Current["Resume_SourceChanged"]);
             }
 
             if (state?.Length != offset || offset == 0)
@@ -39,7 +40,7 @@ internal static class ResumableFileDownloader
                     else if (state.LastModified.HasValue)
                         request.Headers.IfRange = new RangeConditionHeaderValue(state.LastModified.Value);
                     else
-                        throw new IOException("Cannot safely resume: the server supplied no file validator. The partial file was preserved.");
+                        throw new IOException(LocalizationManager.Current["Resume_NoValidator"]);
                 }
 
                 using var response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
@@ -56,7 +57,7 @@ internal static class ResumableFileDownloader
                         (state.ETag is not null && response.Headers.ETag is not null && response.Headers.ETag.ToString() != state.ETag) ||
                         (state.ETag is null && response.Content.Headers.LastModified.HasValue && response.Content.Headers.LastModified != state.LastModified))
                     {
-                        throw new IOException("The server cannot resume this file safely. The partial file was preserved; restarting requires removing its .part and .part.json files.");
+                        throw new IOException(LocalizationManager.Current["Resume_Refused"]);
                     }
 
                     totalBytes = range.Length;
@@ -69,7 +70,7 @@ internal static class ResumableFileDownloader
                 else
                 {
                     if (response.StatusCode != HttpStatusCode.OK)
-                        throw new IOException("The server did not return a complete download response.");
+                        throw new IOException(LocalizationManager.Current["Resume_InvalidResponse"]);
 
                     totalBytes = response.Content.Headers.ContentLength;
                     state = new DownloadState(url, response.Headers.ETag is { IsWeak: false } tag ? tag.ToString() : null,
@@ -86,7 +87,7 @@ internal static class ResumableFileDownloader
                     while ((bytesRead = await source.ReadAsync(buffer, cancellationToken)) > 0)
                     {
                         if (totalBytes.HasValue && file.Position + bytesRead > totalBytes.Value)
-                            throw new IOException("The server returned more data than expected. The partial file was preserved.");
+                            throw new IOException(LocalizationManager.Current["Resume_TooMuchData"]);
 
                         await file.WriteAsync(buffer.AsMemory(0, bytesRead), CancellationToken.None);
                         if (totalBytes > 0)
@@ -99,7 +100,7 @@ internal static class ResumableFileDownloader
                 }
 
                 if (totalBytes.HasValue && file.Length != totalBytes.Value)
-                    throw new IOException("The download ended before the complete file arrived. The partial file was preserved for resuming.");
+                    throw new IOException(LocalizationManager.Current["Resume_Incomplete"]);
             }
         }
 

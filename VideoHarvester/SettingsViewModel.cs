@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.Messaging;
 using VideoHarvester.Messages;
 using VideoHarvester.Models;
 using VideoHarvester.Services;
+using VideoHarvester.Localization;
 using Forms = System.Windows.Forms;
 
 namespace VideoHarvester;
@@ -61,27 +62,33 @@ public partial class SettingsViewModel : ObservableObject
     private async Task SaveSettings()
     {
         IsSaving = true;
-
-        var settings = new AppSettings
+        try
         {
-            DefaultDownloadPath = DefaultDownloadPath,
-            AutoStartDownload = AutoStartDownload,
-            ShowNotifications = ShowNotifications,
-            MaxConcurrentDownloads = MaxConcurrentDownloads,
-            PreferredVideoQuality = PreferredVideoQuality
-        };
-
-        await _settingsService.SaveSettingsAsync(settings);
-
-        // Notify about settings update
-        WeakReferenceMessenger.Default.Send(new SettingsUpdatedMessage
+            var settings = new AppSettings
+            {
+                DefaultDownloadPath = DefaultDownloadPath,
+                AutoStartDownload = AutoStartDownload,
+                ShowNotifications = ShowNotifications,
+                MaxConcurrentDownloads = MaxConcurrentDownloads,
+                PreferredVideoQuality = PreferredVideoQuality,
+                Language = LocalizationManager.Current.LanguageCode
+            };
+            await _settingsService.SaveSettingsAsync(settings);
+            WeakReferenceMessenger.Default.Send(new SettingsUpdatedMessage
+            {
+                MaxConcurrentDownloads = MaxConcurrentDownloads
+            });
+            await Task.Delay(500);
+        }
+        catch (Exception ex)
         {
-            MaxConcurrentDownloads = MaxConcurrentDownloads
-        });
-
-        await Task.Delay(500); // Visual feedback
-
-        IsSaving = false;
+            System.Windows.MessageBox.Show(LocalizationManager.Current.Format("Error_SaveSettings", ex.Message),
+                LocalizationManager.Current["Dialog_Error"], System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+        }
+        finally
+        {
+            IsSaving = false;
+        }
     }
 
     [RelayCommand]
@@ -89,7 +96,7 @@ public partial class SettingsViewModel : ObservableObject
     {
         using var dialog = new Forms.FolderBrowserDialog
         {
-            Description = "Select download folder",
+            Description = LocalizationManager.Current["Settings_SelectFolder"],
             UseDescriptionForTitle = true,
             SelectedPath = DefaultDownloadPath
         };

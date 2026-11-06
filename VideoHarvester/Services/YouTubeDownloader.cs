@@ -1,3 +1,4 @@
+using VideoHarvester.Localization;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
@@ -24,7 +25,8 @@ internal static class YouTubeDownloader
         if (nodePath is null || !python || !ffmpeg)
         {
             video.Status = "Missing dependency";
-            video.ErrorMessage = $"Missing: {(nodePath is null ? "Node.js " : "")}{(!python ? "Python " : "")}{(!ffmpeg ? "FFmpeg" : "")}";
+            video.ErrorMessage = LocalizationManager.Current.Format("Error_MissingDependencies",
+                string.Join(", ", new[] { nodePath is null ? "Node.js" : null, !python ? "Python" : null, !ffmpeg ? "FFmpeg" : null }.Where(tool => tool is not null)));
             return;
         }
 
@@ -104,13 +106,13 @@ internal static class YouTubeDownloader
 
                 // Build detailed error message
                 var errorDetails = new StringBuilder();
-                errorDetails.AppendLine($"Exit Code: {process.ExitCode}");
-                errorDetails.AppendLine($"Expected File: {video.FilePath}");
-                errorDetails.AppendLine($"File Exists: {File.Exists(video.FilePath)}");
+                errorDetails.AppendLine(LocalizationManager.Current.Format("Error_ExitCode", process.ExitCode));
+                errorDetails.AppendLine(LocalizationManager.Current.Format("Error_ExpectedFile", video.FilePath));
+                errorDetails.AppendLine(LocalizationManager.Current.Format("Error_FileExists", LocalizationManager.Current[File.Exists(video.FilePath) ? "Common_Yes" : "Common_No"]));
 
                 if (errorOutput.Length > 0)
                 {
-                    errorDetails.AppendLine("yt_dlp output:");
+                    errorDetails.AppendLine(LocalizationManager.Current["Error_YtDlpOutput"]);
                     // Get last 500 characters of error output to avoid too much data
                     string errorText = errorOutput.ToString();
                     errorDetails.Append(errorText.Length > 500 ? "..." + errorText.Substring(errorText.Length - 500) : errorText);
@@ -136,7 +138,7 @@ internal static class YouTubeDownloader
         catch (Exception ex)
         {
             video.Status = "Failed";
-            video.ErrorMessage = $"Exception: {ex.Message}\n{ex.StackTrace}";
+            video.ErrorMessage = LocalizationManager.Current.Format("Error_Exception", ex.Message, ex.StackTrace);
         }
     }
 
@@ -318,14 +320,14 @@ internal static class YouTubeDownloader
                 var debugInfo = new StringBuilder();
                 if (video.ErrorMessage != null)
                     debugInfo.AppendLine(video.ErrorMessage);
-                debugInfo.AppendLine($"Thumbnail extraction failed:");
-                debugInfo.AppendLine($"Exit Code: {process.ExitCode}");
-                debugInfo.AppendLine($"Stream Length: {memoryStream.Length} bytes");
-                debugInfo.AppendLine($"Video Path: {video.FilePath}");
-                debugInfo.AppendLine($"Video Exists: {File.Exists(video.FilePath)}");
+                debugInfo.AppendLine(LocalizationManager.Current["Error_ThumbnailFailed"]);
+                debugInfo.AppendLine(LocalizationManager.Current.Format("Error_ExitCode", process.ExitCode));
+                debugInfo.AppendLine(LocalizationManager.Current.Format("Error_StreamLength", memoryStream.Length));
+                debugInfo.AppendLine(LocalizationManager.Current.Format("Error_VideoPath", video.FilePath));
+                debugInfo.AppendLine(LocalizationManager.Current.Format("Error_FileExists", LocalizationManager.Current[File.Exists(video.FilePath) ? "Common_Yes" : "Common_No"]));
                 if (errorOutput.Length > 0)
                 {
-                    debugInfo.AppendLine("FFmpeg output:");
+                    debugInfo.AppendLine(LocalizationManager.Current["Error_FFmpegOutput"]);
                     string errorText = errorOutput.ToString();
                     debugInfo.Append(errorText.Length > 500 ? "..." + errorText.Substring(errorText.Length - 500) : errorText);
                 }
@@ -338,7 +340,7 @@ internal static class YouTubeDownloader
             var debugInfo = new StringBuilder();
             if (video.ErrorMessage != null)
                 debugInfo.AppendLine(video.ErrorMessage);
-            debugInfo.AppendLine($"Thumbnail exception: {ex.Message}");
+            debugInfo.AppendLine(LocalizationManager.Current.Format("Error_ThumbnailException", ex.Message));
             video.ErrorMessage = debugInfo.ToString();
         }
     }

@@ -1,0 +1,370 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <data name="App_Loading" xml:space="preserve">
+    <value>Ładowanie VideoHarvester...</value>
+  </data>
+  <data name="App_Subtitle" xml:space="preserve">
+    <value>Pobieraj filmy i dźwięk z wybranego źródła</value>
+  </data>
+  <data name="App_Title" xml:space="preserve">
+    <value>Video Harvester</value>
+  </data>
+  <data name="Common_AppVersion" xml:space="preserve">
+    <value>Wersja aplikacji</value>
+  </data>
+  <data name="Common_Close" xml:space="preserve">
+    <value>Zamknij</value>
+  </data>
+  <data name="Common_CopyError" xml:space="preserve">
+    <value>Kopiuj błąd do schowka</value>
+  </data>
+  <data name="Common_ErrorDetails" xml:space="preserve">
+    <value>⚠ Szczegóły błędu</value>
+  </data>
+  <data name="Common_Later" xml:space="preserve">
+    <value>Później</value>
+  </data>
+  <data name="Common_No" xml:space="preserve">
+    <value>Nie</value>
+  </data>
+  <data name="Common_OpenFolder" xml:space="preserve">
+    <value>Otwórz folder z plikiem</value>
+  </data>
+  <data name="Common_Yes" xml:space="preserve">
+    <value>Tak</value>
+  </data>
+  <data name="Dialog_Error" xml:space="preserve">
+    <value>Błąd</value>
+  </data>
+  <data name="Error_DownloadWithoutMessage" xml:space="preserve">
+    <value>Pobieranie nie powiodło się. Brak szczegółów błędu.</value>
+  </data>
+  <data name="Error_Exception" xml:space="preserve">
+    <value>Wyjątek: {0}
+{1}</value>
+  </data>
+  <data name="Error_ExitCode" xml:space="preserve">
+    <value>Kod wyjścia: {0}</value>
+  </data>
+  <data name="Error_ExpectedFile" xml:space="preserve">
+    <value>Oczekiwany plik: {0}</value>
+  </data>
+  <data name="Error_FFmpegOutput" xml:space="preserve">
+    <value>Komunikaty FFmpeg:</value>
+  </data>
+  <data name="Error_FileExists" xml:space="preserve">
+    <value>Plik istnieje: {0}</value>
+  </data>
+  <data name="Error_InvalidCda" xml:space="preserve">
+    <value>Podaj prawidłowy adres filmu CDA.pl (np. https://www.cda.pl/video/3383563ba).</value>
+  </data>
+  <data name="Error_InvalidWistia" xml:space="preserve">
+    <value>Wklej fragment HTML zawierający odnośnik do filmu Wistia z parametrem wvideo.</value>
+  </data>
+  <data name="Error_InvalidYouTube" xml:space="preserve">
+    <value>Podaj prawidłowy adres filmu w YouTube.</value>
+  </data>
+  <data name="Error_MissingDependencies" xml:space="preserve">
+    <value>Brak wymaganych narzędzi: {0}</value>
+  </data>
+  <data name="Error_NoWistiaAssets" xml:space="preserve">
+    <value>Wistia nie udostępniła żadnych plików filmu do pobrania.</value>
+  </data>
+  <data name="Error_NoWistiaQuality" xml:space="preserve">
+    <value>Brak pliku filmu Wistia w jakości {0}.</value>
+  </data>
+  <data name="Error_SaveLanguage" xml:space="preserve">
+    <value>Nie udało się zapisać wybranego języka.
+
+{0}</value>
+  </data>
+  <data name="Error_SaveSettings" xml:space="preserve">
+    <value>Nie udało się zapisać ustawień.
+
+{0}</value>
+  </data>
+  <data name="Error_Startup" xml:space="preserve">
+    <value>Nie udało się przygotować historii pobierania. Dotychczasowa baza została zachowana.
+
+{0}</value>
+  </data>
+  <data name="Error_StartupTitle" xml:space="preserve">
+    <value>Błąd uruchamiania</value>
+  </data>
+  <data name="Error_StreamLength" xml:space="preserve">
+    <value>Długość strumienia: {0} bajtów</value>
+  </data>
+  <data name="Error_ThumbnailException" xml:space="preserve">
+    <value>Błąd tworzenia miniatury: {0}</value>
+  </data>
+  <data name="Error_ThumbnailFailed" xml:space="preserve">
+    <value>Nie udało się utworzyć miniatury:</value>
+  </data>
+  <data name="Error_Unexpected" xml:space="preserve">
+    <value>Nieoczekiwany błąd: {0}</value>
+  </data>
+  <data name="Error_VideoPath" xml:space="preserve">
+    <value>Ścieżka filmu: {0}</value>
+  </data>
+  <data name="Error_YtDlpOutput" xml:space="preserve">
+    <value>Komunikaty yt_dlp:</value>
+  </data>
+  <data name="History_ClearAll" xml:space="preserve">
+    <value>Wyczyść wszystko</value>
+  </data>
+  <data name="History_ClearQuestion" xml:space="preserve">
+    <value>Czy wyczyścić całą historię pobierania?</value>
+  </data>
+  <data name="History_ClearTitle" xml:space="preserve">
+    <value>Wyczyść historię</value>
+  </data>
+  <data name="History_Format" xml:space="preserve">
+    <value>Format: {0}</value>
+  </data>
+  <data name="History_Quality" xml:space="preserve">
+    <value>Jakość: {0}</value>
+  </data>
+  <data name="History_Refresh" xml:space="preserve">
+    <value>Odśwież</value>
+  </data>
+  <data name="History_Remove" xml:space="preserve">
+    <value>Usuń z historii</value>
+  </data>
+  <data name="History_Started" xml:space="preserve">
+    <value>Rozpoczęto: {0:g}</value>
+  </data>
+  <data name="Menu_History" xml:space="preserve">
+    <value>Historia pobierania</value>
+  </data>
+  <data name="Menu_Language" xml:space="preserve">
+    <value>Język</value>
+  </data>
+  <data name="Menu_Queue" xml:space="preserve">
+    <value>Kolejka pobierania</value>
+  </data>
+  <data name="Menu_Settings" xml:space="preserve">
+    <value>Ustawienia</value>
+  </data>
+  <data name="Menu_Title" xml:space="preserve">
+    <value>Menu</value>
+  </data>
+  <data name="Quality_Best" xml:space="preserve">
+    <value>Najlepsza</value>
+  </data>
+  <data name="Queue_Add" xml:space="preserve">
+    <value>Dodaj do kolejki</value>
+  </data>
+  <data name="Queue_ItemCountFew" xml:space="preserve">
+    <value>{0} pozycje</value>
+  </data>
+  <data name="Queue_ItemCountMany" xml:space="preserve">
+    <value>{0} pozycji</value>
+  </data>
+  <data name="Queue_ItemCountOne" xml:space="preserve">
+    <value>{0} pozycja</value>
+  </data>
+  <data name="Queue_Numbering" xml:space="preserve">
+    <value>Numerowanie plików</value>
+  </data>
+  <data name="Queue_Pause" xml:space="preserve">
+    <value>Wstrzymaj pobieranie</value>
+  </data>
+  <data name="Queue_Remove" xml:space="preserve">
+    <value>Usuń z kolejki</value>
+  </data>
+  <data name="Queue_Source" xml:space="preserve">
+    <value>ŹRÓDŁO</value>
+  </data>
+  <data name="Queue_Start" xml:space="preserve">
+    <value>Rozpocznij lub wznów pobieranie</value>
+  </data>
+  <data name="Queue_Stop" xml:space="preserve">
+    <value>Zatrzymaj pobieranie</value>
+  </data>
+  <data name="Queue_Title" xml:space="preserve">
+    <value>Kolejka pobierania</value>
+  </data>
+  <data name="Queue_VideoUrl" xml:space="preserve">
+    <value>ADRES FILMU</value>
+  </data>
+  <data name="Resume_Incomplete" xml:space="preserve">
+    <value>Połączenie zakończyło się przed pobraniem całego pliku. Częściowy plik został zachowany do wznowienia.</value>
+  </data>
+  <data name="Resume_InvalidResponse" xml:space="preserve">
+    <value>Serwer nie zwrócił odpowiedzi umożliwiającej pobranie całego pliku.</value>
+  </data>
+  <data name="Resume_MissingInfo" xml:space="preserve">
+    <value>Nie można bezpiecznie wznowić pobierania: brak zapisanych informacji. Częściowy plik został zachowany.</value>
+  </data>
+  <data name="Resume_NoValidator" xml:space="preserve">
+    <value>Nie można bezpiecznie wznowić pobierania: serwer nie podał danych pozwalających potwierdzić tożsamość pliku. Częściowy plik został zachowany.</value>
+  </data>
+  <data name="Resume_Refused" xml:space="preserve">
+    <value>Serwer nie pozwala bezpiecznie wznowić tego pliku. Częściowy plik został zachowany. Aby zacząć od nowa, usuń jego pliki .part i .part.json.</value>
+  </data>
+  <data name="Resume_SourceChanged" xml:space="preserve">
+    <value>Nie można bezpiecznie wznowić pobierania: źródło lub częściowy plik uległy zmianie. Częściowy plik został zachowany.</value>
+  </data>
+  <data name="Resume_TooMuchData" xml:space="preserve">
+    <value>Serwer zwrócił więcej danych niż oczekiwano. Częściowy plik został zachowany.</value>
+  </data>
+  <data name="Settings_AutoStart" xml:space="preserve">
+    <value>Automatycznie rozpoczynaj pobieranie</value>
+  </data>
+  <data name="Settings_AutoStartHint" xml:space="preserve">
+    <value>Rozpoczynaj pobieranie po dodaniu pozycji do kolejki</value>
+  </data>
+  <data name="Settings_Browse" xml:space="preserve">
+    <value>Przeglądaj...</value>
+  </data>
+  <data name="Settings_CheckUpdates" xml:space="preserve">
+    <value>Sprawdź aktualizacje</value>
+  </data>
+  <data name="Settings_Concurrent" xml:space="preserve">
+    <value>Maksymalna liczba pobrań jednocześnie</value>
+  </data>
+  <data name="Settings_ConcurrentHint" xml:space="preserve">
+    <value>Liczba jednoczesnych pobrań (1–5)</value>
+  </data>
+  <data name="Settings_DownloadLocation" xml:space="preserve">
+    <value>FOLDER POBIERANIA</value>
+  </data>
+  <data name="Settings_FolderHint" xml:space="preserve">
+    <value>Domyślny folder pobieranych plików</value>
+  </data>
+  <data name="Settings_General" xml:space="preserve">
+    <value>OGÓLNE</value>
+  </data>
+  <data name="Settings_Notifications" xml:space="preserve">
+    <value>Pokazuj powiadomienia</value>
+  </data>
+  <data name="Settings_NotificationsHint" xml:space="preserve">
+    <value>Wyświetlaj powiadomienia o zakończeniu pobierania</value>
+  </data>
+  <data name="Settings_QualityHint" xml:space="preserve">
+    <value>Preferowana jakość pobieranych filmów</value>
+  </data>
+  <data name="Settings_Releases" xml:space="preserve">
+    <value>Wydania w GitHub</value>
+  </data>
+  <data name="Settings_Save" xml:space="preserve">
+    <value>Zapisz ustawienia</value>
+  </data>
+  <data name="Settings_SelectFolder" xml:space="preserve">
+    <value>Wybierz folder pobierania</value>
+  </data>
+  <data name="Settings_Subtitle" xml:space="preserve">
+    <value>Dostosuj ustawienia aplikacji</value>
+  </data>
+  <data name="Settings_Updates" xml:space="preserve">
+    <value>AKTUALIZACJE APLIKACJI</value>
+  </data>
+  <data name="Settings_VideoQuality" xml:space="preserve">
+    <value>JAKOŚĆ FILMU</value>
+  </data>
+  <data name="Source_Cda" xml:space="preserve">
+    <value>CDA.pl</value>
+  </data>
+  <data name="Source_Wistia" xml:space="preserve">
+    <value>Wistia</value>
+  </data>
+  <data name="Source_YouTube" xml:space="preserve">
+    <value>YouTube</value>
+  </data>
+  <data name="Source_YouTubeWav" xml:space="preserve">
+    <value>YouTube WAV</value>
+  </data>
+  <data name="Status_Cancelled" xml:space="preserve">
+    <value>Anulowano</value>
+  </data>
+  <data name="Status_Completed" xml:space="preserve">
+    <value>Zakończono</value>
+  </data>
+  <data name="Status_Downloaded" xml:space="preserve">
+    <value>Pobrano</value>
+  </data>
+  <data name="Status_Downloading" xml:space="preserve">
+    <value>Pobieranie</value>
+  </data>
+  <data name="Status_Failed" xml:space="preserve">
+    <value>Błąd</value>
+  </data>
+  <data name="Status_Missingdependency" xml:space="preserve">
+    <value>Brak wymaganych narzędzi</value>
+  </data>
+  <data name="Status_Paused" xml:space="preserve">
+    <value>Wstrzymano</value>
+  </data>
+  <data name="Status_Pausing" xml:space="preserve">
+    <value>Wstrzymywanie</value>
+  </data>
+  <data name="Status_Preparing" xml:space="preserve">
+    <value>Przygotowywanie</value>
+  </data>
+  <data name="Status_Queued" xml:space="preserve">
+    <value>W kolejce</value>
+  </data>
+  <data name="Status_Ready" xml:space="preserve">
+    <value>Gotowe</value>
+  </data>
+  <data name="Status_Started" xml:space="preserve">
+    <value>Rozpoczęto</value>
+  </data>
+  <data name="Status_Starting" xml:space="preserve">
+    <value>Uruchamianie</value>
+  </data>
+  <data name="Status_Stopping" xml:space="preserve">
+    <value>Zatrzymywanie</value>
+  </data>
+  <data name="Updates_Available" xml:space="preserve">
+    <value>Dostępna jest wersja {0}.</value>
+  </data>
+  <data name="Updates_AvailableLink" xml:space="preserve">
+    <value>Dostępna aktualizacja</value>
+  </data>
+  <data name="Updates_CheckFailed" xml:space="preserve">
+    <value>Nie udało się sprawdzić aktualizacji. Spróbuj później lub otwórz wydania w GitHub.</value>
+  </data>
+  <data name="Updates_Checking" xml:space="preserve">
+    <value>Sprawdzanie aktualizacji…</value>
+  </data>
+  <data name="Updates_Current" xml:space="preserve">
+    <value>Masz aktualną wersję.</value>
+  </data>
+  <data name="Updates_Download" xml:space="preserve">
+    <value>Pobierz aktualizację</value>
+  </data>
+  <data name="Updates_DownloadFailed" xml:space="preserve">
+    <value>Nie udało się pobrać aktualizacji. Obecna wersja pozostała bez zmian. Spróbuj później.</value>
+  </data>
+  <data name="Updates_Downloading" xml:space="preserve">
+    <value>Pobieranie wersji {0}…</value>
+  </data>
+  <data name="Updates_InstallFailed" xml:space="preserve">
+    <value>Nie udało się zainstalować aktualizacji. Możesz dalej używać obecnej wersji i spróbować później.</value>
+  </data>
+  <data name="Updates_Ready" xml:space="preserve">
+    <value>Wersja {0} jest gotowa do zainstalowania.</value>
+  </data>
+  <data name="Updates_ReleaseNotes" xml:space="preserve">
+    <value>Lista zmian</value>
+  </data>
+  <data name="Updates_RequiresPackage" xml:space="preserve">
+    <value>Aby korzystać z automatycznych aktualizacji, użyj instalatora lub paczki portable z wydań w GitHub.</value>
+  </data>
+  <data name="Updates_Restart" xml:space="preserve">
+    <value>Zaktualizuj i uruchom ponownie</value>
+  </data>
+  <data name="Updates_Title" xml:space="preserve">
+    <value>Aktualizacje aplikacji</value>
+  </data>
+  <data name="Updates_UnfinishedQueue" xml:space="preserve">
+    <value>Przed aktualizacją zakończ lub usuń wszystkie niedokończone pozycje kolejki. Pobrana aktualizacja będzie czekać.</value>
+  </data>
+</root>
