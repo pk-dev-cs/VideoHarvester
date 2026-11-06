@@ -1,3 +1,4 @@
+using VideoHarvester.Localization;
 using System.Diagnostics;
 using System.IO;
 using System.Net.Http;
@@ -40,7 +41,7 @@ internal static class WistiaDownloader
             if (!root.TryGetProperty("assets", out var assetsElement) || assetsElement.GetArrayLength() == 0)
             {
                 video.Status = "Failed";
-                video.ErrorMessage = "Wistia did not return any downloadable video assets.";
+                video.ErrorMessage = LocalizationManager.Current["Error_NoWistiaAssets"];
                 return;
             }
 
@@ -50,7 +51,7 @@ internal static class WistiaDownloader
                 string.IsNullOrWhiteSpace(urlElement.GetString()))
             {
                 video.Status = "Failed";
-                video.ErrorMessage = $"No Wistia video asset is available for quality {video.PreferredQuality}.";
+                video.ErrorMessage = LocalizationManager.Current.Format("Error_NoWistiaQuality", video.PreferredQuality);
                 return;
             }
 
@@ -207,14 +208,14 @@ internal static class WistiaDownloader
                 var debugInfo = new StringBuilder();
                 if (video.ErrorMessage != null)
                     debugInfo.AppendLine(video.ErrorMessage);
-                debugInfo.AppendLine($"Thumbnail extraction failed:");
-                debugInfo.AppendLine($"Exit Code: {process.ExitCode}");
-                debugInfo.AppendLine($"Stream Length: {memoryStream.Length} bytes");
-                debugInfo.AppendLine($"Video Path: {video.FilePath}");
-                debugInfo.AppendLine($"Video Exists: {File.Exists(video.FilePath)}");
+                debugInfo.AppendLine(LocalizationManager.Current["Error_ThumbnailFailed"]);
+                debugInfo.AppendLine(LocalizationManager.Current.Format("Error_ExitCode", process.ExitCode));
+                debugInfo.AppendLine(LocalizationManager.Current.Format("Error_StreamLength", memoryStream.Length));
+                debugInfo.AppendLine(LocalizationManager.Current.Format("Error_VideoPath", video.FilePath));
+                debugInfo.AppendLine(LocalizationManager.Current.Format("Error_FileExists", LocalizationManager.Current[File.Exists(video.FilePath) ? "Common_Yes" : "Common_No"]));
                 if (errorOutput.Length > 0)
                 {
-                    debugInfo.AppendLine("FFmpeg output:");
+                    debugInfo.AppendLine(LocalizationManager.Current["Error_FFmpegOutput"]);
                     string errorText = errorOutput.ToString();
                     debugInfo.Append(errorText.Length > 500 ? "..." + errorText.Substring(errorText.Length - 500) : errorText);
                 }
@@ -226,7 +227,7 @@ internal static class WistiaDownloader
             var debugInfo = new StringBuilder();
             if (video.ErrorMessage != null)
                 debugInfo.AppendLine(video.ErrorMessage);
-            debugInfo.AppendLine($"Thumbnail exception: {ex.Message}");
+            debugInfo.AppendLine(LocalizationManager.Current.Format("Error_ThumbnailException", ex.Message));
             video.ErrorMessage = debugInfo.ToString();
         }
     }

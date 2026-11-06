@@ -4,8 +4,12 @@
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <RootNamespace>VideoHarvester</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="../../VideoHarvester/Services/ResumableFileDownloader.cs" Link="ResumableFileDownloader.cs" />
+    <Compile Include="../../VideoHarvester/Localization/LocalizationManager.cs" Link="LocalizationManager.cs" />
+    <EmbeddedResource Include="../../VideoHarvester/Resources/Strings.resx" Link="Resources/Strings.resx" />
+    <EmbeddedResource Include="../../VideoHarvester/Resources/Strings.pl.resx" Link="Resources/Strings.pl.resx" />
   </ItemGroup>
 </Project>

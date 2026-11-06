@@ -1,3 +1,4 @@
+using VideoHarvester.Localization;
 using System.Diagnostics;
 using System.IO;
 using System.Net.Http;
@@ -24,7 +25,8 @@ internal static class CdaDownloader
             if (!python || !ffmpeg)
             {
                 video.Status = "Missing dependency";
-                video.ErrorMessage = $"Missing: {(!python ? "Python " : "")}{(!ffmpeg ? "FFmpeg" : "")}";
+                video.ErrorMessage = LocalizationManager.Current.Format("Error_MissingDependencies",
+                    string.Join(", ", new[] { !python ? "Python" : null, !ffmpeg ? "FFmpeg" : null }.Where(tool => tool is not null)));
                 return;
             }
 
@@ -113,7 +115,7 @@ internal static class CdaDownloader
                 video.Status = "Failed";
                 string errorText = errorOutput.ToString();
                 video.ErrorMessage = string.IsNullOrWhiteSpace(errorText)
-                    ? "Download failed with no error message."
+                    ? LocalizationManager.Current["Error_DownloadWithoutMessage"]
                     : errorText;
             }
         }
