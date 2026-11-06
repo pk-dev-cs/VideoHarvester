@@ -120,7 +120,8 @@ This tool is for personal use only. Please respect copyright laws and terms of s
 ## 🐛 Known Issues
 
 - Some videos may require specific quality format adjustments
-- Pausing cancels the current operation; restarting it does not guarantee resuming from the same position
+- Wistia downloads retain `.part` and `.part.json` files while paused. Starting the same queue item resumes from the saved position when the server supports safe continuation; otherwise it reports an error and preserves the partial file. Only a complete download becomes an MP4 file
+- Pausing YouTube or CDA cancels the current operation; restarting it relies on yt-dlp's resume support
 - Queued items are not restored after restarting the application; download history is preserved
 
 ---
