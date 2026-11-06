@@ -3,6 +3,7 @@ using System.Configuration;
 using System.Data;
 using System.Windows;
 using VideoHarvester.Services;
+using VideoHarvester.Localization;
 using WpfApplication = System.Windows.Application;
 
 namespace VideoHarvester
@@ -39,6 +40,8 @@ namespace VideoHarvester
 
         private async void Application_Startup(object sender, StartupEventArgs e)
         {
+            var settings = await Services.GetRequiredService<ISettingsService>().LoadSettingsAsync();
+            LocalizationManager.Current.SetLanguage(settings.Language);
             // Initialize database
             var historyService = Services.GetRequiredService<IDownloadHistoryService>();
             try
@@ -47,8 +50,8 @@ namespace VideoHarvester
             }
             catch (Exception ex)
             {
-                System.Windows.MessageBox.Show($"Could not prepare download history. Your existing database has been preserved.\n\n{ex.Message}",
-                    "Startup error", MessageBoxButton.OK, MessageBoxImage.Error);
+                System.Windows.MessageBox.Show(LocalizationManager.Current.Format("Error_Startup", ex.Message),
+                    LocalizationManager.Current["Error_StartupTitle"], MessageBoxButton.OK, MessageBoxImage.Error);
                 Shutdown(1);
                 return;
             }

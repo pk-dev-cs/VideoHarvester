@@ -15,11 +15,13 @@ public partial class MainWindow : Window
     private AppUpdateWindow? _updateWindow;
 
     public AppUpdatesViewModel Updates { get; }
+    public LanguageViewModel Languages { get; }
 
     public MainWindow()
     {
         var viewModel = App.Current.Services.GetRequiredService<MainWindowViewModel>();
         Updates = new AppUpdatesViewModel(App.Current.Services.GetRequiredService<IAppUpdateService>(), () => viewModel.CanRestartForUpdate);
+        Languages = new LanguageViewModel(App.Current.Services.GetRequiredService<ISettingsService>());
         InitializeComponent();
         DataContext = viewModel;
         Updates.PropertyChanged += (_, args) =>
@@ -28,6 +30,7 @@ public partial class MainWindow : Window
                 ShowOrHideUpdateWindow();
         };
         Loaded += async (_, _) => await Updates.CheckOnStartupAsync();
+        Closed += (_, _) => Updates.Dispose();
 
         WeakReferenceMessenger.Default.Register<FolderOpenedMessage>(this, (r, message) =>
         {

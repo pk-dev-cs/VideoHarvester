@@ -19,7 +19,7 @@ public class FileSizeConverter : IValueConverter
                 len = len / 1024;
             }
 
-            return $"{len:0.##} {sizes[order]}";
+            return $"{len.ToString("0.##", culture)} {sizes[order]}";
         }
         return null;
     }
