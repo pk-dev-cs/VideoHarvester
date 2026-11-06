@@ -1,4 +1,4 @@
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using System.Configuration;
 using System.Data;
 using System.Windows;
@@ -29,6 +29,7 @@ namespace VideoHarvester
             services.AddSingleton<IDownloadVideoService, DownloadVideoService>();
             services.AddSingleton<IDownloadHistoryService, DownloadHistoryService>();
             services.AddSingleton<ISettingsService, SettingsService>();
+            services.AddSingleton<IAppUpdateService, AppUpdateService>();
             services.AddSingleton<SettingsViewModel, SettingsViewModel>();
             services.AddSingleton<MainWindowViewModel, MainWindowViewModel>();
 

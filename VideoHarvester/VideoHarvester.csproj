@@ -9,9 +9,12 @@
         <UseWPF>true</UseWPF>
         <UseWindowsForms>true</UseWindowsForms>
         <ApplicationIcon>Images\icon.ico</ApplicationIcon>
+        <StartupObject>VideoHarvester.Program</StartupObject>
     </PropertyGroup>
 
     <ItemGroup>
+        <None Include="..\THIRD-PARTY-NOTICES.md" Link="THIRD-PARTY-NOTICES.md" CopyToOutputDirectory="PreserveNewest" />
+        <None Include="..\LICENSE" Link="LICENSE" CopyToOutputDirectory="PreserveNewest" />
         <Content Include="Images\icon.ico" />
         <None Remove="Images\logo.png" />
         <Resource Include="Images\logo.png" />
@@ -25,6 +28,7 @@
         <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.10" />
         <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="2.1.12" />
         <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.10" />
+        <PackageReference Include="Velopack" Version="1.2.161" />
     </ItemGroup>
 
 </Project>
