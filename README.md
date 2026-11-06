@@ -109,15 +109,6 @@ This tool is for personal use only. Please respect copyright laws and terms of s
 
 - Some videos may require specific quality format adjustments
 
-## 📝 Changelog
-
-### Version 1.0.0
-- Initial release
-- Support for Wistia and YouTube downloads
-- Queue management system
-- Download history tracking
-- Dependency checking
-
 ---
 
 Made with 🩵 using .NET 10 and WPF
