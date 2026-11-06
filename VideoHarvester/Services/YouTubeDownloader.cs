@@ -43,12 +43,12 @@ internal static class YouTubeDownloader
         string outputFileName = video.UseOrderNumeration ? $"{video.Order}_{video.FileId}" : video.FileId;
         string fullOutputPath = Path.Combine(outputFolder, $"{outputFileName}.%(ext)s");
         string formatSelector = VideoQualitySelector.GetYouTubeFormat(video.PreferredQuality);
+        string? browser = DefaultBrowserCookies.GetBrowserName();
 
         string[] arguments =
         [
             "-m", "yt_dlp", video.VideoId,
             "--js-runtimes", $"node:{nodePath}",
-            "--cookies-from-browser", "firefox",
             "-f", formatSelector,
             "--check-formats",
             "--merge-output-format", "mkv",
@@ -61,6 +61,7 @@ internal static class YouTubeDownloader
 
         foreach (string argument in arguments)
             startInfo.ArgumentList.Add(argument);
+        DefaultBrowserCookies.AddTo(startInfo, browser);
 
         using var process = new Process { StartInfo = startInfo };
         process.OutputDataReceived += (_, e) => UpdateProgress(video, e.Data);
@@ -76,7 +77,7 @@ internal static class YouTubeDownloader
         try
         {
             // First, extract metadata
-            await ExtractMetadata(video, nodePath, formatSelector);
+            await ExtractMetadata(video, nodePath, formatSelector, browser);
 
             // Check cancellation before starting download
             cancellationToken.ThrowIfCancellationRequested();
@@ -189,7 +190,7 @@ internal static class YouTubeDownloader
         catch (Exception) { return false; }
     }
 
-    private static async Task ExtractMetadata(Video video, string nodePath, string formatSelector)
+    private static async Task ExtractMetadata(Video video, string nodePath, string formatSelector, string? browser)
     {
         try
         {
@@ -206,7 +207,6 @@ internal static class YouTubeDownloader
             [
                 "-m", "yt_dlp", video.VideoId,
                 "--js-runtimes", $"node:{nodePath}",
-                "--cookies-from-browser", "firefox",
                 "-f", formatSelector,
                 "--dump-json",
                 "--no-playlist"
@@ -214,6 +214,7 @@ internal static class YouTubeDownloader
 
             foreach (string argument in arguments)
                 startInfo.ArgumentList.Add(argument);
+            DefaultBrowserCookies.AddTo(startInfo, browser);
 
             using var process = new Process { StartInfo = startInfo };
             process.Start();
