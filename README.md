@@ -22,13 +22,14 @@ A modern WPF desktop application for downloading videos from Wistia, YouTube, an
 - **Download Preferences**: Configure the download folder, auto-start, preferred video quality, and optional file numbering
 - **Metadata Extraction**: Automatically retrieves video title, quality, thumbnail, and file size
 - **Real-time Progress**: Monitor download progress with status updates
+- **Application Updates**: Check GitHub Releases, download a new version, and choose when to install and restart
 
 ## 📋 Prerequisites
 
 Before running VideoHarvester, ensure you have the following dependencies installed:
 
 - **Windows** operating system
-- **.NET 10.0 Desktop Runtime** to run the app, or the **.NET 10.0 SDK** to build it
+- **.NET 10.0 SDK** to build from source; current installer and portable release packages include the runtime (older framework-dependent releases require the .NET 10.0 Desktop Runtime)
 - **Node.js** (for JavaScript runtime requirements)
 - **Python** (for yt-dlp)
 - **FFmpeg** (for video processing)
@@ -38,7 +39,9 @@ The application will check for Node.js, Python, FFmpeg, and yt-dlp on startup an
 
 ## 🚀 Installation
 
-To use a published build, download the ZIP from [GitHub Releases](https://github.com/pk-dev-cs/VideoHarvester/releases), extract all files to a writable folder, and run `VideoHarvester.exe`. The runtime and external tools listed above are installed separately. Older releases may not include all features described here.
+To use a published build, download the Setup.exe installer from [GitHub Releases](https://github.com/pk-dev-cs/VideoHarvester/releases), or extract the portable ZIP to a writable folder and run `VideoHarvester.exe`. Current releases target 64-bit Windows and include the .NET runtime; install the external tools listed above separately. Older releases may not include all features described here.
+
+When upgrading from an older ZIP, close the app and extract the new portable ZIP into the same application folder. Its existing `downloads.db` is copied automatically to the new data location on first launch, leaving the original intact. If switching directly to the installer, copy the old database to `%LOCALAPPDATA%\VideoHarvester\downloads.db` before first launching the new app; keep the original as a backup and do not overwrite an existing destination database.
 
 To build from source:
 
@@ -68,6 +71,8 @@ dotnet run --project VideoHarvester
 
 For YouTube downloads, the app reads cookies from the default Windows browser for HTTPS links when it supports cookie extraction. If no supported browser is detected, it attempts the download without browser cookies. Reading cookies may fail if the browser profile cannot be accessed or decrypted.
 
+Installed and portable release packages check for stable updates after startup. You can also use **Settings → Check for updates** or the compact **Update available** link beside the version. A separate window offers **Download update**, then **Update and restart** or **Later**. Installation is blocked until all unfinished queue items are completed or removed. Choosing Later keeps the downloaded update for a future check and does not install it automatically on the next launch. Running directly from a development build does not enable automatic updates.
+
 ### Video ID Examples
 
 - **Wistia**: `<a href="https://example.com/watch?wvideo=abc123xyz">Watch video</a>` — the current parser requires HTML containing a link with `wvideo=`, rather than a bare ID or plain URL
@@ -85,12 +90,13 @@ Output formats are MKV for YouTube video, WAV for YouTubeWav, and MP4 for Wistia
 - [Microsoft.Data.Sqlite](https://docs.microsoft.com/ef/core/providers/sqlite/) (10.0.10) - Database
 - [SQLitePCLRaw.bundle_e_sqlite3](https://github.com/ericsink/SQLitePCL.raw) (2.1.12) - Native SQLite bundle
 - [Microsoft.Extensions.DependencyInjection](https://docs.microsoft.com/dotnet/core/extensions/dependency-injection) (10.0.10) - DI container
+- [Velopack](https://github.com/velopack/velopack) (1.2.161) - Installer and application updates
 
 
 
 ## 🔧 Configuration
 
-Downloaded files are saved to the `VideoHarvester` folder inside the current user's Windows Videos folder by default. Change the location in **Settings** and click **Save Settings**. Settings are stored in `%APPDATA%\VideoHarvester\settings.json`; download history is stored in `downloads.db` beside the application executable, so that folder must be writable.
+Downloaded files are saved to the `VideoHarvester` folder inside the current user's Windows Videos folder by default. Change the location in **Settings** and click **Save Settings**. Settings are stored in `%APPDATA%\VideoHarvester\settings.json`; download history is stored in `%LOCALAPPDATA%\VideoHarvester\downloads.db`, outside the application folder so updates preserve it.
 
 Settings also include auto-start (enabled by default), maximum concurrent downloads (1–5), and preferred quality (`Best`, `1080p`, `720p`, `480p`, or `360p`). The folder and quality are captured when an item is added to the queue. The "Show notifications" option is saved, but completion notifications are not yet implemented.
 

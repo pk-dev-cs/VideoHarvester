@@ -20,16 +20,18 @@ public class DownloadHistoryService : IDownloadHistoryService
 {
     private readonly string _databasePath;
     private readonly string _connectionString;
+    private readonly string _legacyDatabasePath;
 
     public DownloadHistoryService()
     {
-        var appDirectory = AppDomain.CurrentDomain.BaseDirectory;
-        _databasePath = Path.Combine(appDirectory, "downloads.db");
-        _connectionString = $"Data Source={_databasePath}";
+        _legacyDatabasePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "downloads.db");
+        _databasePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "VideoHarvester", "downloads.db");
+        _connectionString = new SqliteConnectionStringBuilder { DataSource = _databasePath }.ToString();
     }
 
     public async Task InitializeDatabaseAsync()
     {
+        await HistoryDatabaseMigration.MigrateAsync(_legacyDatabasePath, _databasePath);
         using var connection = new SqliteConnection(_connectionString);
         await connection.OpenAsync();
 

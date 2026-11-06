@@ -3,6 +3,8 @@ using Microsoft.Extensions.DependencyInjection;
 using System.Windows;
 using System.Windows.Media.Animation;
 using VideoHarvester.Messages;
+using VideoHarvester.Services;
+using VideoHarvester.Views;
 using WpfApplication = System.Windows.Application;
 
 namespace VideoHarvester;
@@ -10,16 +12,50 @@ namespace VideoHarvester;
 public partial class MainWindow : Window
 {
     private bool _isMenuOpen = false;
+    private AppUpdateWindow? _updateWindow;
+
+    public AppUpdatesViewModel Updates { get; }
 
     public MainWindow()
     {
+        var viewModel = App.Current.Services.GetRequiredService<MainWindowViewModel>();
+        Updates = new AppUpdatesViewModel(App.Current.Services.GetRequiredService<IAppUpdateService>(), () => viewModel.CanRestartForUpdate);
         InitializeComponent();
-        DataContext = App.Current.Services.GetService<MainWindowViewModel>();
+        DataContext = viewModel;
+        Updates.PropertyChanged += (_, args) =>
+        {
+            if (args.PropertyName == nameof(AppUpdatesViewModel.IsPanelVisible))
+                ShowOrHideUpdateWindow();
+        };
+        Loaded += async (_, _) => await Updates.CheckOnStartupAsync();
 
         WeakReferenceMessenger.Default.Register<FolderOpenedMessage>(this, (r, message) =>
         {
             WpfApplication.Current.Dispatcher.Invoke(() => VideoIdTextBox.Clear());
         });
+    }
+
+    private void ShowOrHideUpdateWindow()
+    {
+        if (!Updates.IsPanelVisible)
+        {
+            _updateWindow?.Close();
+            return;
+        }
+
+        if (_updateWindow is not null)
+        {
+            _updateWindow.Activate();
+            return;
+        }
+
+        _updateWindow = new AppUpdateWindow { Owner = this, DataContext = Updates };
+        _updateWindow.Closed += (_, _) =>
+        {
+            _updateWindow = null;
+            Updates.IsPanelVisible = false;
+        };
+        _updateWindow.Show();
     }
 
     private void HamburgerButton_Click(object sender, RoutedEventArgs e)

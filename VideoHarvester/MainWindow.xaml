@@ -12,7 +12,7 @@
     <Window.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="pack://application:,,,/Styles.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/VideoHarvester;component/Styles.xaml" />
             </ResourceDictionary.MergedDictionaries>
             <converters:StatusColorConverter x:Key="StatusColorConverter" />
             <converters:ButtonVisibilityConverter x:Key="ButtonVisibilityConverter" />
@@ -966,6 +966,18 @@
                         </StackPanel>
                     </Border>
 
+                    <Border Style="{StaticResource SurfaceCardStyle}" Padding="20" Margin="0,0,0,16">
+                        <StackPanel DataContext="{Binding Updates, RelativeSource={RelativeSource AncestorType=Window}}">
+                            <TextBlock Text="APPLICATION UPDATES" Style="{StaticResource FieldLabelStyle}" Margin="0,0,0,10" />
+                            <WrapPanel>
+                                <Button Content="Check for updates" Height="36" Margin="0,0,8,0"
+                                        Command="{Binding CheckForUpdatesCommand}" Style="{StaticResource SecondaryButtonStyle}" />
+                                <Button Content="GitHub Releases" Height="36"
+                                        Command="{Binding OpenReleasesCommand}" Style="{StaticResource SecondaryButtonStyle}" />
+                            </WrapPanel>
+                        </StackPanel>
+                    </Border>
+
                     <!-- Save Button -->
                     <Button Height="42" MinWidth="140" HorizontalAlignment="Left"
                             Command="{Binding Settings.SaveSettingsCommand}"
@@ -982,29 +994,44 @@
 
         <!-- Footer with Dependency Status -->
         <Border Grid.Row="2" Background="#151922" BorderBrush="#252B38" BorderThickness="0,1,0,0" Padding="28,12">
-            <ItemsControl ItemsSource="{Binding Dependencies}">
-                <ItemsControl.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" />
-                    </ItemsPanelTemplate>
-                </ItemsControl.ItemsPanel>
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate>
-                        <StackPanel Orientation="Horizontal" Margin="16,0">
-                            <TextBlock Text="{Binding Icon}" 
-                                       FontFamily="Segoe MDL2 Assets" 
-                                       FontSize="16"
-                                       Foreground="{Binding IsAvailable, Converter={StaticResource DependencyStatusColorConverter}}"
-                                       VerticalAlignment="Center" />
-                            <TextBlock Text="{Binding Name}" 
-                                       FontSize="12" 
-                                       Margin="6,0,0,0"
-                                       Foreground="{Binding IsAvailable, Converter={StaticResource DependencyStatusColorConverter}}"
-                                       VerticalAlignment="Center" />
-                        </StackPanel>
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding AppVersion}" FontSize="12" Foreground="#7E899A"
+                               VerticalAlignment="Center" ToolTip="Application version" />
+                    <TextBlock FontSize="12" Margin="12,0,0,0" VerticalAlignment="Center"
+                               DataContext="{Binding Updates, RelativeSource={RelativeSource AncestorType=Window}}"
+                               Visibility="{Binding HasUpdate, Converter={StaticResource BoolToVisibilityConverter}}">
+                        <Hyperlink Command="{Binding ShowUpdateCommand}" Foreground="#60A5FA">Update available</Hyperlink>
+                    </TextBlock>
+                </StackPanel>
+                <ItemsControl Grid.Column="1" ItemsSource="{Binding Dependencies}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal" Margin="16,0">
+                                <TextBlock Text="{Binding Icon}"
+                                           FontFamily="Segoe MDL2 Assets"
+                                           FontSize="16"
+                                           Foreground="{Binding IsAvailable, Converter={StaticResource DependencyStatusColorConverter}}"
+                                           VerticalAlignment="Center" />
+                                <TextBlock Text="{Binding Name}"
+                                           FontSize="12"
+                                           Margin="6,0,0,0"
+                                           Foreground="{Binding IsAvailable, Converter={StaticResource DependencyStatusColorConverter}}"
+                                           VerticalAlignment="Center" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </Grid>
         </Border>
 
         <!-- Sliding Menu Panel -->

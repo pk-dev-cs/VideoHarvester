@@ -14,10 +14,11 @@ namespace VideoHarvester
     {
         public IServiceProvider Services { get; }
 
-        public App()
+        public App() : this(ConfigureServices())
         {
-            Services = ConfigureServices();
         }
+
+        internal App(IServiceProvider services) => Services = services;
 
         public new static App Current => (App)WpfApplication.Current;
 
@@ -29,6 +30,7 @@ namespace VideoHarvester
             services.AddSingleton<IDownloadVideoService, DownloadVideoService>();
             services.AddSingleton<IDownloadHistoryService, DownloadHistoryService>();
             services.AddSingleton<ISettingsService, SettingsService>();
+            services.AddSingleton<IAppUpdateService, AppUpdateService>();
             services.AddSingleton<SettingsViewModel, SettingsViewModel>();
             services.AddSingleton<MainWindowViewModel, MainWindowViewModel>();
 
@@ -39,7 +41,17 @@ namespace VideoHarvester
         {
             // Initialize database
             var historyService = Services.GetRequiredService<IDownloadHistoryService>();
-            await historyService.InitializeDatabaseAsync();
+            try
+            {
+                await historyService.InitializeDatabaseAsync();
+            }
+            catch (Exception ex)
+            {
+                System.Windows.MessageBox.Show($"Could not prepare download history. Your existing database has been preserved.\n\n{ex.Message}",
+                    "Startup error", MessageBoxButton.OK, MessageBoxImage.Error);
+                Shutdown(1);
+                return;
+            }
 
             // Create and show main window first (but don't show it yet)
             var mainWindow = new MainWindow();
