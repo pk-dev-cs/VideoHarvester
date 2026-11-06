@@ -34,13 +34,13 @@ internal static class YouTubeWavDownloader
         };
 
         string outputFileName = video.UseOrderNumeration ? $"{video.Order}_{video.FileId}" : video.FileId;
+        string? browser = DefaultBrowserCookies.GetBrowserName();
 
         string[] arguments =
         [
             "-m", "yt_dlp", video.VideoId,
             "--js-runtimes", $"node:{nodePath}",
             "--remote-components", "ejs:github",
-            "--cookies-from-browser", "firefox",
             "--extractor-args", "youtube:player_client=tv",
             "--extract-audio",
             "--audio-format", "wav",
@@ -52,6 +52,7 @@ internal static class YouTubeWavDownloader
 
         foreach (string argument in arguments)
             startInfo.ArgumentList.Add(argument);
+        DefaultBrowserCookies.AddTo(startInfo, browser);
 
         using var process = new Process { StartInfo = startInfo };
         process.OutputDataReceived += (_, e) => UpdateProgress(video, e.Data);
@@ -60,7 +61,7 @@ internal static class YouTubeWavDownloader
         try
         {
             // First, extract metadata
-            await ExtractMetadata(video, nodePath);
+            await ExtractMetadata(video, nodePath, browser);
 
             // Check cancellation before starting download
             cancellationToken.ThrowIfCancellationRequested();
@@ -151,7 +152,7 @@ internal static class YouTubeWavDownloader
         catch (Exception) { return false; }
     }
 
-    private static async Task ExtractMetadata(Video video, string nodePath)
+    private static async Task ExtractMetadata(Video video, string nodePath, string? browser)
     {
         try
         {
@@ -168,13 +169,13 @@ internal static class YouTubeWavDownloader
             [
                 "-m", "yt_dlp", video.VideoId,
                 "--js-runtimes", $"node:{nodePath}",
-                "--cookies-from-browser", "firefox",
                 "--dump-json",
                 "--no-playlist"
             ];
 
             foreach (string argument in arguments)
                 startInfo.ArgumentList.Add(argument);
+            DefaultBrowserCookies.AddTo(startInfo, browser);
 
             using var process = new Process { StartInfo = startInfo };
             process.Start();
