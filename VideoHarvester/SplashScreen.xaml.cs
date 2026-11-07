@@ -1,3 +1,4 @@
+using System.Reflection;
 using System.Windows;
 using System.Windows.Threading;
 
@@ -9,6 +10,8 @@ namespace VideoHarvester
     public partial class SplashScreen : Window
     {
         private DispatcherTimer _timer;
+
+        public string AppVersion { get; } = $"v{typeof(SplashScreen).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion.Split('+')[0] ?? "unknown"}";
 
         public SplashScreen()
         {

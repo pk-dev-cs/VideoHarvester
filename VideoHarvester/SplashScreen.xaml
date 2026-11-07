@@ -35,6 +35,17 @@
                             Foreground="#4A9EFF"
                             Margin="10,5,10,10" />
             </StackPanel>
+
+            <Border VerticalAlignment="Bottom"
+                    HorizontalAlignment="Right"
+                    Margin="16"
+                    Padding="8,4"
+                    Background="#CC0F1117"
+                    CornerRadius="6">
+                <TextBlock Text="{Binding AppVersion, RelativeSource={RelativeSource AncestorType=Window}}"
+                           FontSize="12"
+                           Foreground="#D8DEE9" />
+            </Border>
         </Grid>
     </Border>
 </Window>
