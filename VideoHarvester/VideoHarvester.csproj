@@ -31,4 +31,18 @@
         <PackageReference Include="Velopack" Version="1.2.161" />
     </ItemGroup>
 
+    <ItemGroup Condition="'$(Configuration)' == 'Debug'">
+        <UpToDateCheckOutput Include="$(TargetDir)tools\yt-dlp.exe" />
+        <UpToDateCheckOutput Include="$(TargetDir)tools\node.exe" />
+        <UpToDateCheckOutput Include="$(TargetDir)tools\ffmpeg.exe" />
+        <UpToDateCheckOutput Include="$(TargetDir)tools\ffprobe.exe" />
+    </ItemGroup>
+
+    <Target Name="InstallDevelopmentToolchain"
+            AfterTargets="Build"
+            Condition="'$(Configuration)' == 'Debug' and (!Exists('$(TargetDir)tools\yt-dlp.exe') or !Exists('$(TargetDir)tools\node.exe') or !Exists('$(TargetDir)tools\ffmpeg.exe') or !Exists('$(TargetDir)tools\ffprobe.exe'))">
+        <Message Text="Installing the VideoHarvester development toolchain..." Importance="high" />
+        <Exec Command="powershell.exe -NoProfile -ExecutionPolicy Bypass -File &quot;$(MSBuildProjectDirectory)\..\eng\Install-ReleaseToolchain.ps1&quot; -OutputDirectory &quot;$(TargetDir).&quot;" />
+    </Target>
+
 </Project>
