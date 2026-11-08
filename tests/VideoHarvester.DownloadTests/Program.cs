@@ -3,6 +3,24 @@ using System.Net.Http.Headers;
 using System.Text;
 using VideoHarvester.Services;
 
+string toolsDirectory = Path.Combine(AppContext.BaseDirectory, "tools");
+Directory.CreateDirectory(toolsDirectory);
+try
+{
+    foreach (string fileName in new[] { "yt-dlp.exe", "node.exe", "ffmpeg.exe", "ffprobe.exe" })
+        await File.WriteAllBytesAsync(Path.Combine(toolsDirectory, fileName), []);
+
+    Check(ToolchainLocator.FindYtDlp() == Path.Combine(toolsDirectory, "yt-dlp.exe"), "Bundled yt-dlp must take precedence.");
+    Check(ToolchainLocator.FindNode() == Path.Combine(toolsDirectory, "node.exe"), "Bundled Node.js must take precedence.");
+    Check(ToolchainLocator.FindFFmpeg() == Path.Combine(toolsDirectory, "ffmpeg.exe"), "Bundled FFmpeg must take precedence.");
+    Check(ToolchainLocator.FindFFprobe() == Path.Combine(toolsDirectory, "ffprobe.exe"), "Bundled FFprobe must take precedence.");
+    Console.WriteLine("PASS bundled toolchain");
+}
+finally
+{
+    Directory.Delete(toolsDirectory, true);
+}
+
 const string url = "https://example.test/video.mp4";
 byte[] data = Encoding.UTF8.GetBytes("0123456789");
 string folder = Path.Combine(Path.GetTempPath(), "VideoHarvester-download-tests-" + Guid.NewGuid());

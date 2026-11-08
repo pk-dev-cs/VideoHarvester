@@ -18,15 +18,15 @@ internal static class YouTubeDownloader
         video.ErrorMessage = null;
         var errorOutput = new StringBuilder();
 
-        string? nodePath = FindNode();
-        bool python = await CommandExists("python", "--version");
-        bool ffmpeg = await CommandExists("ffmpeg", "-version");
+        string? ytDlpPath = ToolchainLocator.FindYtDlp();
+        string? nodePath = ToolchainLocator.FindNode();
+        string? ffmpegPath = ToolchainLocator.FindFFmpeg();
 
-        if (nodePath is null || !python || !ffmpeg)
+        if (ytDlpPath is null || nodePath is null || ffmpegPath is null)
         {
             video.Status = "Missing dependency";
             video.ErrorMessage = LocalizationManager.Current.Format("Error_MissingDependencies",
-                string.Join(", ", new[] { nodePath is null ? "Node.js" : null, !python ? "Python" : null, !ffmpeg ? "FFmpeg" : null }.Where(tool => tool is not null)));
+                string.Join(", ", new[] { ytDlpPath is null ? "yt-dlp" : null, nodePath is null ? "Node.js" : null, ffmpegPath is null ? "FFmpeg" : null }.Where(tool => tool is not null)));
             return;
         }
 
@@ -35,7 +35,7 @@ internal static class YouTubeDownloader
 
         var startInfo = new ProcessStartInfo
         {
-            FileName = "python",
+            FileName = ytDlpPath,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             UseShellExecute = false,
@@ -49,8 +49,9 @@ internal static class YouTubeDownloader
 
         string[] arguments =
         [
-            "-m", "yt_dlp", video.VideoId,
+            video.VideoId,
             "--js-runtimes", $"node:{nodePath}",
+            "--ffmpeg-location", ffmpegPath,
             "-f", formatSelector,
             "--check-formats",
             "--merge-output-format", "mkv",
@@ -79,7 +80,7 @@ internal static class YouTubeDownloader
         try
         {
             // First, extract metadata
-            await ExtractMetadata(video, nodePath, formatSelector, browser);
+            await ExtractMetadata(video, ytDlpPath, nodePath, ffmpegPath, formatSelector, browser);
 
             // Check cancellation before starting download
             cancellationToken.ThrowIfCancellationRequested();
@@ -98,7 +99,7 @@ internal static class YouTubeDownloader
                 video.Status = "Downloaded";
 
                 // Extract thumbnail after successful download
-                await ExtractThumbnail(video);
+                await ExtractThumbnail(video, ffmpegPath);
             }
             else
             {
@@ -149,56 +150,13 @@ internal static class YouTubeDownloader
             video.Progress = (int)Math.Round(progress);
     }
 
-    private static string? FindNode()
-    {
-        string[] commonPaths = [@"C:\Program Files\nodejs\node.exe", @"C:\Program Files (x86)\nodejs\node.exe"];
-        foreach (string path in commonPaths)
-            if (File.Exists(path)) return path;
-
-        string? pathVariable = Environment.GetEnvironmentVariable("PATH");
-        if (string.IsNullOrWhiteSpace(pathVariable)) return null;
-
-        foreach (string folder in pathVariable.Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries))
-        {
-            try
-            {
-                string nodePath = Path.Combine(folder.Trim(), "node.exe");
-                if (File.Exists(nodePath)) return nodePath;
-            }
-            catch (Exception) { }
-        }
-
-        return null;
-    }
-
-    private static async Task<bool> CommandExists(string command, string testArgument)
+    private static async Task ExtractMetadata(Video video, string ytDlpPath, string nodePath, string ffmpegPath, string formatSelector, string? browser)
     {
         try
         {
             var startInfo = new ProcessStartInfo
             {
-                FileName = command,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true
-            };
-            startInfo.ArgumentList.Add(testArgument);
-            using Process? process = Process.Start(startInfo);
-            if (process is null) return false;
-            await process.WaitForExitAsync();
-            return process.ExitCode == 0;
-        }
-        catch (Exception) { return false; }
-    }
-
-    private static async Task ExtractMetadata(Video video, string nodePath, string formatSelector, string? browser)
-    {
-        try
-        {
-            var startInfo = new ProcessStartInfo
-            {
-                FileName = "python",
+                FileName = ytDlpPath,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 UseShellExecute = false,
@@ -207,8 +165,9 @@ internal static class YouTubeDownloader
 
             string[] arguments =
             [
-                "-m", "yt_dlp", video.VideoId,
+                video.VideoId,
                 "--js-runtimes", $"node:{nodePath}",
+                "--ffmpeg-location", ffmpegPath,
                 "-f", formatSelector,
                 "--dump-json",
                 "--no-playlist"
@@ -255,7 +214,7 @@ internal static class YouTubeDownloader
         }
     }
 
-    private static async Task ExtractThumbnail(Video video)
+    private static async Task ExtractThumbnail(Video video, string ffmpegPath)
     {
         try
         {
@@ -263,7 +222,7 @@ internal static class YouTubeDownloader
             var errorOutput = new StringBuilder();
             var startInfo = new ProcessStartInfo
             {
-                FileName = "ffmpeg",
+                FileName = ffmpegPath,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 UseShellExecute = false,

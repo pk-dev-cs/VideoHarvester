@@ -89,7 +89,6 @@ public partial class MainWindowViewModel : ObservableObject
     private async Task InitializeDependencies()
     {
         Dependencies.Add(await DependencyChecker.CheckNodeJs());
-        Dependencies.Add(await DependencyChecker.CheckPython());
         Dependencies.Add(await DependencyChecker.CheckFFmpeg());
         Dependencies.Add(await DependencyChecker.CheckYtDlp());
     }

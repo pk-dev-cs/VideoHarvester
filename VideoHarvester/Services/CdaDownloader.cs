@@ -19,14 +19,14 @@ internal static class CdaDownloader
 
         try
         {
-            bool python = await CommandExists("python", "--version");
-            bool ffmpeg = await CommandExists("ffmpeg", "-version");
+            string? ytDlpPath = ToolchainLocator.FindYtDlp();
+            string? ffmpegPath = ToolchainLocator.FindFFmpeg();
 
-            if (!python || !ffmpeg)
+            if (ytDlpPath is null || ffmpegPath is null)
             {
                 video.Status = "Missing dependency";
                 video.ErrorMessage = LocalizationManager.Current.Format("Error_MissingDependencies",
-                    string.Join(", ", new[] { !python ? "Python" : null, !ffmpeg ? "FFmpeg" : null }.Where(tool => tool is not null)));
+                    string.Join(", ", new[] { ytDlpPath is null ? "yt-dlp" : null, ffmpegPath is null ? "FFmpeg" : null }.Where(tool => tool is not null)));
                 return;
             }
 
@@ -34,7 +34,7 @@ internal static class CdaDownloader
             Directory.CreateDirectory(outputFolder);
 
             // First, extract metadata
-            await ExtractMetadata(video);
+            await ExtractMetadata(video, ytDlpPath, ffmpegPath);
 
             // Check cancellation before starting download
             cancellationToken.ThrowIfCancellationRequested();
@@ -43,7 +43,7 @@ internal static class CdaDownloader
 
             var startInfo = new ProcessStartInfo
             {
-                FileName = "python",
+                FileName = ytDlpPath,
                 WorkingDirectory = outputFolder,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
@@ -57,7 +57,7 @@ internal static class CdaDownloader
             // Build arguments list
             var argumentsList = new List<string>
             {
-                "-m", "yt_dlp", cdaUrl
+                cdaUrl
             };
 
             // Add format selection only if specific quality is requested
@@ -71,6 +71,7 @@ internal static class CdaDownloader
 
             argumentsList.AddRange(new[]
             {
+                "--ffmpeg-location", ffmpegPath,
                 "--merge-output-format", "mp4",
                 "-o", $"{outputFileName}.%(ext)s",
                 "--windows-filenames", "--progress", "--newline"
@@ -108,7 +109,7 @@ internal static class CdaDownloader
                 await Task.Delay(200, cancellationToken);
 
                 // Extract thumbnail after successful download
-                await ExtractThumbnail(video);
+                await ExtractThumbnail(video, ffmpegPath);
             }
             else
             {
@@ -131,7 +132,7 @@ internal static class CdaDownloader
         }
     }
 
-    private static async Task ExtractMetadata(Video video)
+    private static async Task ExtractMetadata(Video video, string ytDlpPath, string ffmpegPath)
     {
         try
         {
@@ -139,7 +140,7 @@ internal static class CdaDownloader
 
             var startInfo = new ProcessStartInfo
             {
-                FileName = "python",
+                FileName = ytDlpPath,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 UseShellExecute = false,
@@ -148,7 +149,8 @@ internal static class CdaDownloader
 
             string[] arguments =
             [
-                "-m", "yt_dlp", cdaUrl,
+                cdaUrl,
+                "--ffmpeg-location", ffmpegPath,
                 "--dump-json",
                 "--no-playlist"
             ];
@@ -202,33 +204,7 @@ internal static class CdaDownloader
         }
     }
 
-    private static async Task<bool> CommandExists(string command, string args)
-    {
-        try
-        {
-            var startInfo = new ProcessStartInfo
-            {
-                FileName = command,
-                Arguments = args,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true
-            };
-
-            using var process = Process.Start(startInfo);
-            if (process == null) return false;
-
-            await process.WaitForExitAsync();
-            return process.ExitCode == 0;
-        }
-        catch
-        {
-            return false;
-        }
-    }
-
-    private static async Task ExtractThumbnail(Video video)
+    private static async Task ExtractThumbnail(Video video, string ffmpegPath)
     {
         try
         {
@@ -236,7 +212,7 @@ internal static class CdaDownloader
             var errorOutput = new StringBuilder();
             var startInfo = new ProcessStartInfo
             {
-                FileName = "ffmpeg",
+                FileName = ffmpegPath,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 UseShellExecute = false,

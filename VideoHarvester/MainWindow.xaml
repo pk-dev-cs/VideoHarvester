@@ -1030,7 +1030,7 @@
                     </ItemsControl.ItemsPanel>
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                            <StackPanel Orientation="Horizontal" Margin="16,0">
+                            <StackPanel Orientation="Horizontal" Margin="16,0" ToolTip="{Binding Version}">
                                 <TextBlock Text="{Binding Icon}"
                                            FontFamily="Segoe MDL2 Assets"
                                            FontSize="16"

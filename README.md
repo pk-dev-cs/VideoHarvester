@@ -16,7 +16,7 @@ A modern WPF desktop application for downloading videos from Wistia, YouTube, an
 
 - **Queue Management**: Add videos to the queue and start, pause, stop, or remove individual items
 - **Download History**: Track downloads with SQLite, remove individual entries, or clear all history without deleting downloaded files
-- **Dependency Checker**: Automatic verification of required tools (Node.js, Python, FFmpeg, yt-dlp)
+- **Dependency Checker**: Automatic verification of the bundled Node.js, FFmpeg, and yt-dlp tools
 - **Modern UI**: Clean, intuitive WPF interface with MVVM architecture
 - **Batch Processing**: Run 1–5 downloads concurrently
 - **Download Preferences**: Configure the download folder, auto-start, preferred video quality, and optional file numbering
@@ -26,20 +26,16 @@ A modern WPF desktop application for downloading videos from Wistia, YouTube, an
 
 ## 📋 Prerequisites
 
-Before running VideoHarvester, ensure you have the following dependencies installed:
+VideoHarvester has the following platform requirements:
 
 - **Windows** operating system
 - **.NET 10.0 SDK** to build from source; current installer and portable release packages include the runtime (older framework-dependent releases require the .NET 10.0 Desktop Runtime)
-- **Node.js** (for JavaScript runtime requirements)
-- **Python** (for yt-dlp)
-- **FFmpeg** (for video processing)
-- **yt-dlp** (Python package: `python -m pip install --upgrade yt-dlp`)
 
-The application will check for Node.js, Python, FFmpeg, and yt-dlp on startup and display their status. Python and FFmpeg must be available in `PATH`; Node.js is detected in `PATH` or its standard installation folders. Python and yt-dlp are used for YouTube and CDA; Node.js is used for YouTube, and FFmpeg is used for media processing and video thumbnails.
+Published installer and portable packages include Node.js, FFmpeg, and the standalone yt-dlp executable. No separate download-tool installation is required. Development builds look for the tools in `VideoHarvester/tools` next to the application and fall back to executables available in `PATH`; Node.js is also detected in its standard installation folders.
 
 ## 🚀 Installation
 
-To use a published build, download the Setup.exe installer from [GitHub Releases](https://github.com/pk-dev-cs/VideoHarvester/releases), or extract the portable ZIP to a writable folder and run `VideoHarvester.exe`. Current releases target 64-bit Windows and include the .NET runtime; install the external tools listed above separately. Older releases may not include all features described here.
+To use a published build, download the Setup.exe installer from [GitHub Releases](https://github.com/pk-dev-cs/VideoHarvester/releases), or extract the portable ZIP to a writable folder and run `VideoHarvester.exe`. Current releases target 64-bit Windows and include the .NET runtime and download toolchain. Older releases may not include all features described here.
 
 When upgrading from an older ZIP, close the app and extract the new portable ZIP into the same application folder. Its existing `downloads.db` is copied automatically to the new data location on first launch, leaving the original intact. If switching directly to the installer, copy the old database to `%LOCALAPPDATA%\VideoHarvester\downloads.db` before first launching the new app; keep the original as a backup and do not overwrite an existing destination database.
 
@@ -91,6 +87,11 @@ Output formats are MKV for YouTube video, WAV for YouTubeWav, and MP4 for Wistia
 - [SQLitePCLRaw.bundle_e_sqlite3](https://github.com/ericsink/SQLitePCL.raw) (2.1.12) - Native SQLite bundle
 - [Microsoft.Extensions.DependencyInjection](https://docs.microsoft.com/dotnet/core/extensions/dependency-injection) (10.0.10) - DI container
 - [Velopack](https://github.com/velopack/velopack) (1.2.161) - Installer and application updates
+- [yt-dlp](https://github.com/yt-dlp/yt-dlp) - Standalone video downloader bundled in releases
+- [Node.js](https://nodejs.org/) - JavaScript runtime bundled in releases
+- [FFmpeg](https://ffmpeg.org/) - Media processing tools bundled in releases
+
+Bundled tool versions and checksums are pinned in [`eng/toolchain.json`](eng/toolchain.json) and are updated deliberately with application releases.
 
 
 

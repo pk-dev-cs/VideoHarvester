@@ -150,12 +150,16 @@ internal static class WistiaDownloader
     }
     private static async Task ExtractThumbnail(Video video)
     {
+        string? ffmpegPath = ToolchainLocator.FindFFmpeg();
+        if (ffmpegPath is null)
+            return;
+
         try
         {
             var errorOutput = new StringBuilder();
             var startInfo = new ProcessStartInfo
             {
-                FileName = "ffmpeg",
+                FileName = ffmpegPath,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 UseShellExecute = false,

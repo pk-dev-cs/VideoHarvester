@@ -113,7 +113,7 @@
     <value>Ścieżka filmu: {0}</value>
   </data>
   <data name="Error_YtDlpOutput" xml:space="preserve">
-    <value>Komunikaty yt_dlp:</value>
+    <value>Komunikaty yt-dlp:</value>
   </data>
   <data name="History_ClearAll" xml:space="preserve">
     <value>Wyczyść wszystko</value>
