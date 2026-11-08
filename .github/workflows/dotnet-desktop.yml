@@ -29,6 +29,9 @@ jobs:
     - name: Build the application
       run: dotnet build VideoHarvester.sln --configuration ${{ matrix.configuration }}
 
+    - name: Run unit tests
+      run: dotnet test tests/VideoHarvester.UnitTests --configuration ${{ matrix.configuration }} --no-build --collect:"XPlat Code Coverage"
+
     - name: Run download tests
       run: dotnet run --project tests/VideoHarvester.DownloadTests --configuration ${{ matrix.configuration }}
 
