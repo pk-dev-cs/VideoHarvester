@@ -3,7 +3,7 @@
     <PropertyGroup>
         <OutputType>WinExe</OutputType>
         <TargetFramework>net10.0-windows</TargetFramework>
-        <Version>0.3.0</Version>
+        <Version>0.6.0</Version>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
         <UseWPF>true</UseWPF>
@@ -36,6 +36,10 @@
         <UpToDateCheckOutput Include="$(TargetDir)tools\node.exe" />
         <UpToDateCheckOutput Include="$(TargetDir)tools\ffmpeg.exe" />
         <UpToDateCheckOutput Include="$(TargetDir)tools\ffprobe.exe" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <InternalsVisibleTo Include="VideoHarvester.UnitTests" />
     </ItemGroup>
 
     <Target Name="InstallDevelopmentToolchain"

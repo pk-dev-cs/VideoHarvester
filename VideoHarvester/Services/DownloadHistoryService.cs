@@ -1,4 +1,5 @@
 using Microsoft.Data.Sqlite;
+using System.Globalization;
 using System.IO;
 using VideoHarvester.Models;
 
@@ -22,10 +23,10 @@ public class DownloadHistoryService : IDownloadHistoryService
     private readonly string _connectionString;
     private readonly string _legacyDatabasePath;
 
-    public DownloadHistoryService()
+    public DownloadHistoryService(string? databasePath = null, string? legacyDatabasePath = null)
     {
-        _legacyDatabasePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "downloads.db");
-        _databasePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "VideoHarvester", "downloads.db");
+        _legacyDatabasePath = legacyDatabasePath ?? Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "downloads.db");
+        _databasePath = databasePath ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "VideoHarvester", "downloads.db");
         _connectionString = new SqliteConnectionStringBuilder { DataSource = _databasePath }.ToString();
     }
 
@@ -237,8 +238,8 @@ public class DownloadHistoryService : IDownloadHistoryService
             Title = reader.IsDBNull(2) ? null : reader.GetString(2),
             LocalPath = reader.IsDBNull(3) ? null : reader.GetString(3),
             Status = reader.GetString(4),
-            CreatedAt = DateTime.Parse(reader.GetString(5)),
-            FinishedAt = reader.IsDBNull(6) ? null : DateTime.Parse(reader.GetString(6)),
+            CreatedAt = DateTime.Parse(reader.GetString(5), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind),
+            FinishedAt = reader.IsDBNull(6) ? null : DateTime.Parse(reader.GetString(6), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind),
             FileSize = reader.IsDBNull(7) ? null : reader.GetInt64(7),
             Format = reader.IsDBNull(8) ? null : reader.GetString(8),
             Quality = reader.IsDBNull(9) ? null : reader.GetString(9),

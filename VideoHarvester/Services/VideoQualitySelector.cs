@@ -30,7 +30,7 @@ internal static class VideoQualitySelector
     {
         int? maximumHeight = GetMaximumHeight(preferredQuality);
         return maximumHeight is null
-            ? "best"
-            : $"best[height<={maximumHeight}]";
+            ? "bestvideo+bestaudio/best"
+            : $"bestvideo[height<={maximumHeight}]+bestaudio/bestvideo+bestaudio/best";
     }
 }

@@ -60,14 +60,8 @@ internal static class CdaDownloader
                 cdaUrl
             };
 
-            // Add format selection only if specific quality is requested
-            int? maxHeight = VideoQualitySelector.GetMaximumHeight(video.PreferredQuality);
-            if (maxHeight.HasValue)
-            {
-                argumentsList.Add("-f");
-                argumentsList.Add($"best[height<={maxHeight}]");
-            }
-            // If "Best" or no quality specified, don't add -f to let yt-dlp choose automatically
+            argumentsList.Add("-f");
+            argumentsList.Add(VideoQualitySelector.GetCdaFormat(video.PreferredQuality));
 
             argumentsList.AddRange(new[]
             {
