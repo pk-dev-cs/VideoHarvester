@@ -1,17 +1,14 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
-using HtmlAgilityPack;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Reflection;
-using System.Web;
 using System.Windows;
 using VideoHarvester.Messages;
 using VideoHarvester.Models;
 using VideoHarvester.Services;
 using VideoHarvester.Localization;
-using HtmlDocument = HtmlAgilityPack.HtmlDocument;
 
 namespace VideoHarvester;
 
@@ -93,55 +90,12 @@ public partial class MainWindowViewModel : ObservableObject
         Dependencies.Add(await DependencyChecker.CheckYtDlp());
     }
 
-    public static string? ExtractWistiaVideoId(string? html)
-    {
-        if (string.IsNullOrWhiteSpace(html))
-            return null;
-
-        var doc = new HtmlDocument();
-        doc.LoadHtml(html);
-
-        // Look for all anchor tags with href attributes
-        var links = doc.DocumentNode.SelectNodes("//a[@href]");
-
-        if (links == null) return null;
-
-        foreach (var link in links)
-        {
-            var href = link.GetAttributeValue("href", null!);
-            if (href != null && href.Contains("wvideo="))
-            {
-                try
-                {
-                    var uri = new Uri(href);
-                    var query = HttpUtility.ParseQueryString(uri.Query);
-                    return query["wvideo"];
-                }
-                catch
-                {
-                    // fallback if Uri fails (maybe it's a relative URL)
-                    var query = href.Split('?').Skip(1).FirstOrDefault();
-                    if (query != null)
-                    {
-                        var parts = HttpUtility.ParseQueryString(query);
-                        return parts["wvideo"];
-                    }
-                }
-            }
-        }
-
-        return null;
-    }
+    public static string? ExtractWistiaVideoId(string? html) => VideoReferenceParser.ExtractWistiaId(html);
 
     [RelayCommand]
     public void AddToQueue()
     {
-        string? videoReference = SelectedSource switch
-        {
-            VideoSource.Wistia => ExtractWistiaVideoId(VideoId),
-            VideoSource.Cda => ExtractCdaVideoId(VideoId),
-            _ => NormalizeYouTubeUrl(VideoId)
-        };
+        string? videoReference = VideoReferenceParser.Parse(SelectedSource, VideoId);
 
         if (string.IsNullOrWhiteSpace(videoReference))
         {
@@ -176,44 +130,6 @@ public partial class MainWindowViewModel : ObservableObject
 
         if (Settings.AutoStartDownload)
             StartQueueProcessing();
-    }
-
-    private static string? NormalizeYouTubeUrl(string? value)
-    {
-        if (!Uri.TryCreate(value?.Trim(), UriKind.Absolute, out Uri? uri)) return null;
-        string host = uri.Host.ToLowerInvariant();
-        bool valid = host == "youtu.be" || host == "youtube.com" || host.EndsWith(".youtube.com", StringComparison.Ordinal) || host == "youtube-nocookie.com" || host.EndsWith(".youtube-nocookie.com", StringComparison.Ordinal);
-        return valid ? uri.AbsoluteUri : null;
-    }
-
-    private static string? ExtractCdaVideoId(string? value)
-    {
-        if (string.IsNullOrWhiteSpace(value))
-            return null;
-
-        // Try to parse as URL first
-        if (Uri.TryCreate(value.Trim(), UriKind.Absolute, out Uri? uri))
-        {
-            string host = uri.Host.ToLowerInvariant();
-            if (host == "cda.pl" || host.EndsWith(".cda.pl", StringComparison.Ordinal))
-            {
-                // Extract video ID from path like /video/3383563ba
-                var match = System.Text.RegularExpressions.Regex.Match(uri.AbsolutePath, @"/video/([a-zA-Z0-9]+)");
-                if (match.Success)
-                {
-                    return match.Groups[1].Value;
-                }
-            }
-        }
-
-        // If not a URL, maybe it's just the video ID
-        var idMatch = System.Text.RegularExpressions.Regex.Match(value.Trim(), @"^([a-zA-Z0-9]+)$");
-        if (idMatch.Success)
-        {
-            return idMatch.Groups[1].Value;
-        }
-
-        return null;
     }
 
     private static string ResolveDownloadDirectory(string? configuredPath)
