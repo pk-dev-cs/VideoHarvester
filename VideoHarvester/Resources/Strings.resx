@@ -113,7 +113,7 @@
     <value>Video Path: {0}</value>
   </data>
   <data name="Error_YtDlpOutput" xml:space="preserve">
-    <value>yt_dlp output:</value>
+    <value>yt-dlp output:</value>
   </data>
   <data name="History_ClearAll" xml:space="preserve">
     <value>Clear all</value>

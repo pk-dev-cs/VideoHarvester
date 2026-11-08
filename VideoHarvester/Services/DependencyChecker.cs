@@ -1,5 +1,4 @@
 using System.Diagnostics;
-using System.IO;
 using VideoHarvester.Models;
 
 namespace VideoHarvester.Services;
@@ -14,20 +13,7 @@ internal static class DependencyChecker
             Icon = "\uE774" // Computer icon from Segoe MDL2 Assets
         };
 
-        string? nodePath = FindNode();
-        status.IsAvailable = nodePath is not null;
-        return status;
-    }
-
-    public static async Task<DependencyStatus> CheckPython()
-    {
-        var status = new DependencyStatus
-        {
-            Name = "Python",
-            Icon = "\uE943" // Python-like code icon
-        };
-
-        status.IsAvailable = await CommandExists("python", "--version");
+        (status.IsAvailable, status.Version) = await ReadVersion(ToolchainLocator.FindNode(), "--version");
         return status;
     }
 
@@ -39,7 +25,7 @@ internal static class DependencyChecker
             Icon = "\uE8B8" // Video icon
         };
 
-        status.IsAvailable = await CommandExists("ffmpeg", "-version");
+        (status.IsAvailable, status.Version) = await ReadVersion(ToolchainLocator.FindFFmpeg(), "-version", "ffmpeg version ");
         return status;
     }
 
@@ -51,59 +37,15 @@ internal static class DependencyChecker
             Icon = "\uE896" // Download icon
         };
 
-        // Check if yt-dlp is available via python -m yt_dlp
-        status.IsAvailable = await CheckPythonModule();
+        (status.IsAvailable, status.Version) = await ReadVersion(ToolchainLocator.FindYtDlp(), "--version");
         return status;
     }
 
-    private static async Task<bool> CheckPythonModule()
+    private static async Task<(bool IsAvailable, string? Version)> ReadVersion(string? command, string argument, string? versionPrefix = null)
     {
-        try
-        {
-            var startInfo = new ProcessStartInfo
-            {
-                FileName = "python",
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true
-            };
-            startInfo.ArgumentList.Add("-m");
-            startInfo.ArgumentList.Add("yt_dlp");
-            startInfo.ArgumentList.Add("--version");
+        if (command is null)
+            return (false, null);
 
-            using Process? process = Process.Start(startInfo);
-            if (process is null) return false;
-            await process.WaitForExitAsync();
-            return process.ExitCode == 0;
-        }
-        catch (Exception) { return false; }
-    }
-
-    private static string? FindNode()
-    {
-        string[] commonPaths = [@"C:\Program Files\nodejs\node.exe", @"C:\Program Files (x86)\nodejs\node.exe"];
-        foreach (string path in commonPaths)
-            if (File.Exists(path)) return path;
-
-        string? pathVariable = Environment.GetEnvironmentVariable("PATH");
-        if (string.IsNullOrWhiteSpace(pathVariable)) return null;
-
-        foreach (string folder in pathVariable.Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries))
-        {
-            try
-            {
-                string nodePath = Path.Combine(folder.Trim(), "node.exe");
-                if (File.Exists(nodePath)) return nodePath;
-            }
-            catch (Exception) { }
-        }
-
-        return null;
-    }
-
-    private static async Task<bool> CommandExists(string command, string testArgument)
-    {
         try
         {
             var startInfo = new ProcessStartInfo
@@ -114,12 +56,24 @@ internal static class DependencyChecker
                 UseShellExecute = false,
                 CreateNoWindow = true
             };
-            startInfo.ArgumentList.Add(testArgument);
+            startInfo.ArgumentList.Add(argument);
             using Process? process = Process.Start(startInfo);
-            if (process is null) return false;
+            if (process is null)
+                return (false, null);
+
+            Task<string> standardOutput = process.StandardOutput.ReadToEndAsync();
+            Task<string> standardError = process.StandardError.ReadToEndAsync();
             await process.WaitForExitAsync();
-            return process.ExitCode == 0;
+            string output = string.Join(Environment.NewLine, await standardOutput, await standardError);
+            string? versionLine = output.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).FirstOrDefault();
+            if (versionPrefix is not null && versionLine?.StartsWith(versionPrefix, StringComparison.OrdinalIgnoreCase) == true)
+                versionLine = versionLine[versionPrefix.Length..].Split(' ', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault();
+
+            return (process.ExitCode == 0, versionLine);
         }
-        catch (Exception) { return false; }
+        catch (Exception)
+        {
+            return (false, null);
+        }
     }
 }

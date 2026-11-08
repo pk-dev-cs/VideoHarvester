@@ -13,8 +13,10 @@ internal static class YouTubeWavDownloader
     {
         video.Status = "Preparing";
 
-        string? nodePath = FindNode();
-        if (nodePath is null || !await CommandExists("python", "--version") || !await CommandExists("ffmpeg", "-version"))
+        string? ytDlpPath = ToolchainLocator.FindYtDlp();
+        string? nodePath = ToolchainLocator.FindNode();
+        string? ffmpegPath = ToolchainLocator.FindFFmpeg();
+        if (ytDlpPath is null || nodePath is null || ffmpegPath is null)
         {
             video.Status = "Missing dependency";
             return;
@@ -25,7 +27,7 @@ internal static class YouTubeWavDownloader
 
         var startInfo = new ProcessStartInfo
         {
-            FileName = "python",
+            FileName = ytDlpPath,
             WorkingDirectory = outputFolder,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
@@ -38,8 +40,9 @@ internal static class YouTubeWavDownloader
 
         string[] arguments =
         [
-            "-m", "yt_dlp", video.VideoId,
+            video.VideoId,
             "--js-runtimes", $"node:{nodePath}",
+            "--ffmpeg-location", ffmpegPath,
             "--remote-components", "ejs:github",
             "--extractor-args", "youtube:player_client=tv",
             "--extract-audio",
@@ -61,7 +64,7 @@ internal static class YouTubeWavDownloader
         try
         {
             // First, extract metadata
-            await ExtractMetadata(video, nodePath, browser);
+            await ExtractMetadata(video, ytDlpPath, nodePath, ffmpegPath, browser);
 
             // Check cancellation before starting download
             cancellationToken.ThrowIfCancellationRequested();
@@ -109,56 +112,13 @@ internal static class YouTubeWavDownloader
             video.Progress = (int)Math.Round(progress);
     }
 
-    private static string? FindNode()
-    {
-        string[] commonPaths = [@"C:\Program Files\nodejs\node.exe", @"C:\Program Files (x86)\nodejs\node.exe"];
-        foreach (string path in commonPaths)
-            if (File.Exists(path)) return path;
-
-        string? pathVariable = Environment.GetEnvironmentVariable("PATH");
-        if (string.IsNullOrWhiteSpace(pathVariable)) return null;
-
-        foreach (string folder in pathVariable.Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries))
-        {
-            try
-            {
-                string nodePath = Path.Combine(folder.Trim(), "node.exe");
-                if (File.Exists(nodePath)) return nodePath;
-            }
-            catch (Exception) { }
-        }
-
-        return null;
-    }
-
-    private static async Task<bool> CommandExists(string command, string testArgument)
+    private static async Task ExtractMetadata(Video video, string ytDlpPath, string nodePath, string ffmpegPath, string? browser)
     {
         try
         {
             var startInfo = new ProcessStartInfo
             {
-                FileName = command,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true
-            };
-            startInfo.ArgumentList.Add(testArgument);
-            using Process? process = Process.Start(startInfo);
-            if (process is null) return false;
-            await process.WaitForExitAsync();
-            return process.ExitCode == 0;
-        }
-        catch (Exception) { return false; }
-    }
-
-    private static async Task ExtractMetadata(Video video, string nodePath, string? browser)
-    {
-        try
-        {
-            var startInfo = new ProcessStartInfo
-            {
-                FileName = "python",
+                FileName = ytDlpPath,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 UseShellExecute = false,
@@ -167,8 +127,9 @@ internal static class YouTubeWavDownloader
 
             string[] arguments =
             [
-                "-m", "yt_dlp", video.VideoId,
+                video.VideoId,
                 "--js-runtimes", $"node:{nodePath}",
+                "--ffmpeg-location", ffmpegPath,
                 "--dump-json",
                 "--no-playlist"
             ];

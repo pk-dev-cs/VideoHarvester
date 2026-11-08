@@ -8,6 +8,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="../../VideoHarvester/Services/ResumableFileDownloader.cs" Link="ResumableFileDownloader.cs" />
+    <Compile Include="../../VideoHarvester/Services/ToolchainLocator.cs" Link="ToolchainLocator.cs" />
     <Compile Include="../../VideoHarvester/Localization/LocalizationManager.cs" Link="LocalizationManager.cs" />
     <EmbeddedResource Include="../../VideoHarvester/Resources/Strings.resx" Link="Resources/Strings.resx" />
     <EmbeddedResource Include="../../VideoHarvester/Resources/Strings.pl.resx" Link="Resources/Strings.pl.resx" />
