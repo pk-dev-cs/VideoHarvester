@@ -1,0 +1,17 @@
+{
+  "ytDlp": {
+    "version": "2026.10.26",
+    "url": "https://github.com/yt-dlp/yt-dlp/releases/download/2026.10.26/yt-dlp.exe",
+    "sha256": "f5389d3698ecde4ef06f4e6b1ce0294fe9ac1396228c8990b8d3416d6d177a7d"
+  },
+  "node": {
+    "version": "22.21.0",
+    "url": "https://nodejs.org/dist/v22.21.0/node-v22.21.0-win-x64.zip",
+    "sha256": "84d31df6571c3c7156707265bf51e2a021656fa1584bf6f4486b792dcde54d7d"
+  },
+  "ffmpeg": {
+    "version": "n9.0.2-47-gb204e94e90",
+    "url": "https://github.com/BtbN/FFmpeg-Builds/releases/download/autobuild-2026-11-05-12-48/ffmpeg-n9.0.2-47-gb204e94e90-win64-lgpl-9.0.zip",
+    "sha256": "9d557b1a39b9db87ff9b5cf7a4c2c3fd42e5f3d21c68714b2dd6e104bd48f715"
+  }
+}

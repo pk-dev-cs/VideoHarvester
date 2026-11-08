@@ -63,6 +63,10 @@ jobs:
     - name: Publish Windows application with bundled runtime
       run: dotnet publish VideoHarvester/VideoHarvester.csproj --configuration Release --runtime win-x64 --self-contained true --output ./publish "-p:Version=$env:APP_VERSION"
 
+    - name: Add pinned download toolchain
+      shell: pwsh
+      run: ./eng/Install-ReleaseToolchain.ps1 -OutputDirectory ./publish
+
     - name: Restore packaging tool
       run: dotnet tool restore
 
@@ -83,7 +87,7 @@ jobs:
 
           ### Installation
           - Use the Setup.exe asset to install the application, or extract the portable ZIP to a writable folder.
-          - Both packages include the .NET runtime. Python, yt-dlp, FFmpeg, and Node.js are installed separately as required by the selected source.
+          - Both packages include the .NET runtime, yt-dlp, FFmpeg, and Node.js. No separate tool installation is required.
           - Installed and portable builds check for stable updates. Download an update, then choose Update and restart or Later. Finish or remove unfinished queue items before installing.
 
           ### Upgrading from older ZIP releases
